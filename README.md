@@ -72,7 +72,7 @@ IPv6                 Enabled
 ## One‑liner installation
 
 ```
-git clone https://github.com/YOURNAME/secfetch.git && cd secfetch && pip install .
+git clone https://github.com/ake13-art/secfetch.git && cd secfetch && pip install .
 ```
 
 After installation:
@@ -88,7 +88,7 @@ secfetch
 Clone the repository:
 
 ```
-git clone https://github.com/YOURNAME/secfetch.git
+git clone https://github.com/ake13-art/secfetch.git
 cd secfetch
 ```
 
