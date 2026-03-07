@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "secfetch"
+version = "1.0.0"
+description = "Lightweight Linux security inspection tool"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+
+authors = [
+  {name = "ake13"}
+]
+
+keywords = [
+  "security",
+  "linux",
+  "hardening",
+  "kernel",
+  "audit",
+  "cli"
+]
+
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: System Administrators",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Security",
+  "Topic :: System :: Systems Administration"
+]
+
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/ake13-art/secfetch"
+Repository = "https://github.com/ake13-art/secfetch"
+Issues = "https://github.com/ake13-art/secfetch/issues"
+
+[project.scripts]
+secfetch = "secfetch.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
