@@ -211,7 +211,7 @@ secfetch/
 │       │   └── scoring.py
 │       ├── ui/
 │       │   └── output.py
-│       └── main.py
+│       └── cli.py
 ├── pyproject.toml
 └── README.md
 ```
