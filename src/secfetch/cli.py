@@ -1,9 +1,10 @@
 import argparse
-import os
-from secfetch.core.runner import run_checks
-from secfetch.ui.output import print_results, print_results_short
+import threading
+import time
+from secfetch.core.engine import run_checks
+from secfetch.ui.output import print_results, print_results_short, print_results_live
 from secfetch.ui.help import print_help, print_check_help
-from secfetch.checks.network import port_db
+from secfetch.data import port_db
 
 
 def main():
@@ -16,6 +17,7 @@ def main():
     parser.add_argument(
         "-h", "--help", action="store_true", default=False, help=argparse.SUPPRESS
     )
+    parser.add_argument("--interval", type=int, default=5, help=argparse.SUPPRESS)
 
     args = parser.parse_args()
 
@@ -30,9 +32,34 @@ def main():
             print_help()
         return
 
-    # set before run_checks so ports.py can read it
-    if args.short:
-        os.environ["SECFETCH_SHORT"] = "1"
+    if args.command == "live":
+        stop_event = threading.Event()
+
+        def wait_for_quit():
+            while not stop_event.is_set():
+                try:
+                    key = input()
+                    if key.strip().lower() == "q":
+                        stop_event.set()
+                except EOFError:
+                    break
+
+        listener = threading.Thread(target=wait_for_quit, daemon=True)
+        listener.start()
+
+        try:
+            while not stop_event.is_set():
+                results = run_checks(fast=False)
+                print_results_live(results, args.interval)
+                for _ in range(args.interval * 10):
+                    if stop_event.is_set():
+                        break
+                    time.sleep(0.1)
+        except KeyboardInterrupt:
+            pass
+
+        print("\n  Live monitoring stopped.")
+        return
 
     if args.command == "fastscan":
         results = run_checks(fast=True)

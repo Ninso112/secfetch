@@ -47,7 +47,9 @@ CATEGORY_TITLES = {
     "kernel_hardening": "Kernel Hardening",
     "network": "Network",
     "filesystem": "Filesystem",
-}  # color codes
+}
+
+# color codes
 RED, YELLOW, GREEN, CYAN, RESET = (
     "\033[31m",
     "\033[33m",
@@ -63,14 +65,12 @@ def colorize(status: str, text: str) -> str:
 
 
 def score_bar(score: int, width: int = 15) -> str:
-    # filled/empty bar based on score percentage
     filled = int((score / 100) * width)
     bar = "█" * filled + "░" * (width - filled)
     color = GREEN if score >= 75 else YELLOW if score >= 40 else RED
     return f"{color}[{bar}]{RESET}"
 
 
-# [CHANGED] helper to strip ANSI codes for accurate length calculation
 def _strip_ansi(text: str) -> str:
     return re.sub(r"\033\[[0-9;]*m", "", text)
 
@@ -85,12 +85,10 @@ def print_results(results: list[dict]) -> None:
 
     print(LOGO_FULL)
 
-    # group results by category
     grouped = {}
     for r in results:
         grouped.setdefault(r["category"], []).append(r)
 
-    # print each category block
     for cat in CATEGORY_ORDER:
         if cat not in grouped:
             continue
@@ -103,9 +101,10 @@ def print_results(results: list[dict]) -> None:
                 r["value"]
                 if "\033[" in r["value"]
                 else colorize(r["status"], r["value"])
-            )  # [CHANGED]
+            )
             print(f"    {icon}  {name}  {val}")
-        print()  # score section
+        print()
+
     print("  Security Score")
     print("  " + "─" * 40)
     for cat in CATEGORY_ORDER:
@@ -120,6 +119,17 @@ def print_results(results: list[dict]) -> None:
 
 
 # ─────────────────────────────────────────────
+#  Live output
+# ─────────────────────────────────────────────
+
+
+def print_results_live(results: list[dict], interval: int) -> None:
+    print("\033[2J\033[H", end="", flush=True)
+    print_results(results)
+    print(f"  Refreshing every {interval}s  —  Press Q + Enter to stop")
+
+
+# ─────────────────────────────────────────────
 #  Short output – Box variant
 # ─────────────────────────────────────────────
 
@@ -128,7 +138,6 @@ def _short_box(results: list[dict]) -> None:
     score, _ = calculate_score(results)
 
     def fmt(name) -> str:
-        # find result by name and format with icon
         r = next((x for x in results if x["name"] == name), None)
         if r is None:
             return "N/A"
@@ -144,11 +153,9 @@ def _short_box(results: list[dict]) -> None:
     ]
 
     print()
-    # [CHANGED] use visible length (strip ANSI) for accurate box width
     width = max(len(_strip_ansi(l)) for l in lines) + 4
     print("  ┌" + "─" * (width - 2) + "┐")
     for l in lines:
-        # [CHANGED] pad based on visible length, not raw string length
         pad = width - len(_strip_ansi(l)) - 2
         print("  │" + l + " " * pad + "│")
     print("  └" + "─" * (width - 2) + "┘")
@@ -179,7 +186,8 @@ def _short_side(results: list[dict]) -> None:
         f"  Firewall     {fmt('Firewall')}",
         f"  Ports        {fmt('Open Ports')}",
         f"  Score        {score_bar(score, width=12)}  {score}/100",
-    ]  # print logo lines left, info lines right
+    ]
+
     max_lines = max(len(LOGO_SHORT), len(info_lines))
     for i in range(max_lines):
         left = LOGO_SHORT[i] if i < len(LOGO_SHORT) else " " * 42

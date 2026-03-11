@@ -1,7 +1,7 @@
 import subprocess
 import os
 from secfetch.core.check import security_check
-from secfetch.checks.network import port_db
+from secfetch.data import port_db
 
 RED, YELLOW, GREEN, RESET = "\033[31m", "\033[33m", "\033[32m", "\033[0m"
 
