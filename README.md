@@ -1,3 +1,10 @@
+
+<div align="center">
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,50:161b22,100:1f6feb&height=180&section=header&text=&fontSize=0" width="100%"/>
+
+<br>
+
 ```
                    ____     __       __
    ________  _____/ __/__  / /______/ /_
@@ -5,69 +12,163 @@
  (__  )  __/ /__/ __/  __/ /_/ /__/ / / /
 /____/\___/\___/_/  \___/\__/\___/_/ /_/
 ```
-# version 1.4
 
-A lightweight **Linux security inspection CLI** — like neofetch, but for your security posture.
+<br>
 
-> **Note:** This project uses AI as a development tool. All code is human‑reviewed, tested and maintained by the author.
+[![Typing SVG](https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=600&size=20&duration=3000&pause=1000&color=58A6FF&center=true&vCenter=true&repeat=true&width=550&height=50&lines=Linux+Security+Inspection+CLI;Like+neofetch%2C+but+for+your+security;One+command.+Full+overview.+Zero+bloat.)](https://github.com/ake13-art/secfetch)
+
+<br>
+
+![Version](https://img.shields.io/badge/version-1.4-1f6feb?style=for-the-badge&labelColor=0d1117)
+![License](https://img.shields.io/badge/license-GPL--3.0-58a6ff?style=for-the-badge&labelColor=0d1117)
+![Python](https://img.shields.io/badge/python-3.x-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=0d1117)
+![Platform](https://img.shields.io/badge/platform-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=white&labelColor=0d1117)
+
+<br>
+
+> **This project uses AI as a development tool.**
+> **All code is human‑reviewed, tested and maintained by the author.**
+
+</div>
+
+<br>
 
 ---
 
-## Installation
+<br>
+
+<div align="center">
+
+## ⚡ Quick Start
+
+</div>
+
+<br>
 
 ```bash
 git clone https://github.com/ake13-art/secfetch.git && cd secfetch && pip install .
 ```
 
----
+```bash
+secfetch
+```
 
-## Usage
-
-| Command                 | Description                         |
-| ----------------------- | ----------------------------------- |
-| `secfetch`              | Full security overview              |
-| `secfetch fastscan`     | Only enabled checks (faster)        |
-| `secfetch --short`      | Compact one‑box summary             |
-| `secfetch live`         | Live monitoring, auto refresh every 5s |
-| `secfetch live --interval <n>` | Refresh every n seconds       |
-| `secfetch help <check>` | Detailed info, risk level and fix   |
-| `secfetch -h`           | Help page with all available checks |
+<br>
 
 ---
 
-## Checks
+<br>
 
-| Key                    | Category         | Risk   |
-| ---------------------- | ---------------- | ------ |
-| `kernel`               | System           | Info   |
-| `secure boot`          | System           | Medium |
-| `aslr`                 | Kernel Security  | High   |
-| `lockdown`             | Kernel Security  | Medium |
-| `lsm`                  | Kernel Security  | Medium |
-| `kptr_restrict`        | Kernel Hardening | Medium |
-| `dmesg_restrict`       | Kernel Hardening | Medium |
-| `ptrace_scope`         | Kernel Hardening | Medium |
-| `modules_disabled`     | Kernel Hardening | Low    |
-| `unprivileged_bpf`     | Kernel Hardening | Medium |
-| `firewall`             | Network          | Medium |
-| `firewall rules`       | Network          | Low    |
-| `ipv6`                 | Network          | Low    |
-| `open ports`           | Network          | Medium |
-| `services`             | Network          | Medium |
-| `tcp syn cookies`      | Network          | Medium |
-| `reverse path filter`  | Network          | Medium |
-| `world writable files` | Filesystem       | High   |
-| `suid binaries`        | Filesystem       | Medium |
-| `/tmp noexec`          | Filesystem       | Medium |
-| `/tmp sticky bit`      | Filesystem       | Low    |
+<div align="center">
 
-Use `secfetch help <check>` for details on any check.
+## 🖥️ Commands
+
+</div>
+
+<br>
+
+<div align="center">
+
+| Command | What it does |
+|:---|:---|
+| `secfetch` | Full security overview |
+| `secfetch fastscan` | Only enabled checks — faster |
+| `secfetch --short` | Compact one‑box summary |
+| `secfetch live` | Live monitoring — auto refresh every 5s |
+| `secfetch live --interval <n>` | Custom refresh interval |
+| `secfetch help <check>` | Detailed info, risk level & fix |
+| `secfetch -h` | Show all available options |
+
+</div>
+
+<br>
 
 ---
 
-## Example Output
+<br>
 
-**Full mode** — `secfetch`
+<div align="center">
+
+## 🔍 Security Checks
+
+</div>
+
+<br>
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🖥️ System
+| Check | Risk |
+|:---|:---|
+| `kernel` | ℹ️ Info |
+| `secure boot` | ⚠️ Medium |
+
+### 🛡️ Kernel Security
+| Check | Risk |
+|:---|:---|
+| `aslr` | 🔴 High |
+| `lockdown` | ⚠️ Medium |
+| `lsm` | ⚠️ Medium |
+
+### 🔒 Kernel Hardening
+| Check | Risk |
+|:---|:---|
+| `kptr_restrict` | ⚠️ Medium |
+| `dmesg_restrict` | ⚠️ Medium |
+| `ptrace_scope` | ⚠️ Medium |
+| `modules_disabled` | 🟢 Low |
+| `unprivileged_bpf` | ⚠️ Medium |
+
+</td>
+<td width="50%" valign="top">
+
+### 🌐 Network
+| Check | Risk |
+|:---|:---|
+| `firewall` | ⚠️ Medium |
+| `firewall rules` | 🟢 Low |
+| `ipv6` | 🟢 Low |
+| `open ports` | ⚠️ Medium |
+| `services` | ⚠️ Medium |
+| `tcp syn cookies` | ⚠️ Medium |
+| `reverse path filter` | ⚠️ Medium |
+
+### 📁 Filesystem
+| Check | Risk |
+|:---|:---|
+| `world writable files` | 🔴 High |
+| `suid binaries` | ⚠️ Medium |
+| `/tmp noexec` | ⚠️ Medium |
+| `/tmp sticky bit` | 🟢 Low |
+
+<br>
+
+> Use `secfetch help <check>` for details on any check.
+
+</td>
+</tr>
+</table>
+
+<br>
+
+---
+
+<br>
+
+<div align="center">
+
+## 📸 Example Output
+
+</div>
+
+<br>
+
+<details>
+<summary><b>🔎 Full Mode</b> — <code>secfetch</code></summary>
+<br>
+
 ```
                    ____     __       __
    ________  _____/ __/__  / /______/ /_
@@ -113,7 +214,12 @@ Use `secfetch help <check>` for details on any check.
     Total                 [████████░░░░]  67/100
 ```
 
-**Live mode** — `secfetch live`
+</details>
+
+<details>
+<summary><b>📡 Live Mode</b> — <code>secfetch live</code></summary>
+<br>
+
 ```
                    ____     __       __
    ________  _____/ __/__  / /______/ /_
@@ -161,7 +267,12 @@ Use `secfetch help <check>` for details on any check.
   Refreshing every 5s — Press Q + Enter to stop
 ```
 
-**Short mode** — `secfetch --short`
+</details>
+
+<details>
+<summary><b>⚡ Short Mode</b> — <code>secfetch --short</code></summary>
+<br>
+
 ```
   ┌──────────────────────────────────────────────────────────┐
   │  System    Kernel: 6.19.6-arch1-1   Secure Boot: ✖      │
@@ -171,35 +282,101 @@ Use `secfetch help <check>` for details on any check.
   └──────────────────────────────────────────────────────────┘
 ```
 
-Designed for `.bashrc` / `.zshrc` as a terminal startup overview.
-Fastscan checks can be toggled in `config.conf` (created on first run).
+*Designed for `.bashrc` / `.zshrc` as a terminal startup overview.*
+
+</details>
+
+<br>
 
 ---
 
-## Short Mode Layout
+<br>
 
-In `output.py` you can switch the `--short` style:
+<div align="center">
+
+## ⚙️ Configuration
+
+</div>
+
+<br>
+
+Fastscan checks can be toggled in `config.conf` (created on first run).
+
+Short mode layout can be changed in `output.py`:
 
 ```python
 SHORT_LAYOUT = "box"    # bordered box (default)
 # SHORT_LAYOUT = "side" # logo left, info right
 ```
 
----
-
-## Roadmap
-
-**v1.5** 
-- New command: `secfetch improve` → Scan for vulnerabilities; subsequent fix recommendation
-- New command: `secfetch improve --auto` performs simple fixes itself (with a list of changes and consent request)
-
-**v2.0** 
-- `secfetch deepscan` with CVE lookups and system fingerprinting · AUR package
+<br>
 
 ---
 
-# License
+<br>
+
+<div align="center">
+
+## 🗺️ Roadmap
+
+</div>
+
+<br>
+
+<table>
+<tr>
+<td align="center" width="50%">
+
+### 🔧 v1.5
+
+`secfetch improve`
+Scan → find vulnerabilities → suggest fixes
+
+`secfetch improve --auto`
+Apply simple fixes automatically
+*(with consent prompt)*
+
+</td>
+<td align="center" width="50%">
+
+### 🚀 v2.0
+
+`secfetch deepscan`
+CVE lookups & system fingerprinting and much more
+
+</td>
+</tr>
+</table>
+
+<br>
+
+---
+
+<br>
+
+<div align="center">
+
+## 📜 License
 
 This project is licensed under the **GNU General Public License v3.0 (GPL‑3.0)**.
-
 See the [LICENSE](LICENSE) file for details.
+
+<br>
+
+---
+
+<br>
+
+<img src="https://img.shields.io/github/stars/ake13-art/secfetch?style=for-the-badge&logo=github&color=f0c000&logoColor=white&labelColor=0d1117" />
+<img src="https://img.shields.io/github/forks/ake13-art/secfetch?style=for-the-badge&logo=git&color=58a6ff&logoColor=white&labelColor=0d1117" />
+<img src="https://img.shields.io/github/issues/ake13-art/secfetch?style=for-the-badge&logo=github&color=8b949e&logoColor=white&labelColor=0d1117" />
+
+<br><br>
+
+*⭐ Star this repo if secfetch is useful to you*
+
+<br>
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,50:161b22,100:1f6feb&height=120&section=footer" width="100%"/>
+
+</div>
