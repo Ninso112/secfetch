@@ -1,4 +1,4 @@
-from secfetch.core.registry import register
+from secfetch.core.engine import register
 
 
 def security_check(name, category, risk="info"):

@@ -5,7 +5,7 @@
  (__  )  __/ /__/ __/  __/ /_/ /__/ / / /
 /____/\___/\___/_/  \___/\__/\___/_/ /_/
 ```
-# version 1.3.1
+# version 1.4
 
 A lightweight **Linux security inspection CLI** — like neofetch, but for your security posture.
 
@@ -28,6 +28,8 @@ git clone https://github.com/ake13-art/secfetch.git && cd secfetch && pip instal
 | `secfetch`              | Full security overview              |
 | `secfetch fastscan`     | Only enabled checks (faster)        |
 | `secfetch --short`      | Compact one‑box summary             |
+| `secfetch live`         | Live monitoring, auto refresh every 5s |
+| `secfetch live --interval <n>` | Refresh every n seconds       |
 | `secfetch help <check>` | Detailed info, risk level and fix   |
 | `secfetch -h`           | Help page with all available checks |
 
@@ -111,6 +113,54 @@ Use `secfetch help <check>` for details on any check.
     Total                 [████████░░░░]  67/100
 ```
 
+**Live mode** — `secfetch live`
+```
+                   ____     __       __
+   ________  _____/ __/__  / /______/ /_
+  / ___/ _ \/ ___/ /_/ _ \/ __/ ___/ __ \
+ (__  )  __/ /__/ __/  __/ /_/ /__/ / / /
+/____/\___/\___/_/  \___/\__/\___/_/ /_/
+
+  System
+  ────────────────────────────────────────
+    •  Kernel                  6.19.6-arch1-1
+    ✖  Secure Boot             Disabled
+
+  Kernel Security
+  ────────────────────────────────────────
+    ✔  ASLR                    Full
+    ⚠  Lockdown                none
+    ✔  LSM                     capability,landlock
+
+  Kernel Hardening
+  ────────────────────────────────────────
+    ✖  kptr_restrict           Unrestricted
+    ✔  dmesg_restrict          Enabled
+    ✔  ptrace_scope            Restricted
+    ⚠  modules_disabled        Disabled
+    ✔  unprivileged_bpf        Permanently Disabled
+
+  Network
+  ────────────────────────────────────────
+    ⚠  Firewall Rules          No rules found
+    •  IPv6                    Enabled
+    ⚠  Open Ports              53 (domain/UDP), 68 (bootpc/UDP)
+    ✔  Reverse Path Filter     Strict
+    ⚠  Services                28 running, 26 unexpected
+    ✔  TCP SYN Cookies         Enabled
+
+  Security Score
+  ────────────────────────────────────────
+    System                [░░░░░░░░░░░░]  0/100
+    Kernel Security       [██████████░░]  85/100
+    Kernel Hardening      [████████░░░░]  72/100
+    Network               [███████░░░░░]  65/100
+  ────────────────────────────────────────
+    Total                 [████████░░░░]  67/100
+
+  Refreshing every 5s — Press Q + Enter to stop
+```
+
 **Short mode** — `secfetch --short`
 ```
   ┌──────────────────────────────────────────────────────────┐
@@ -139,9 +189,12 @@ SHORT_LAYOUT = "box"    # bordered box (default)
 
 ## Roadmap
 
-**v1.4** — Live monitoring (`secfetch live`): firewall/port watch with configurable refresh rate
+**v1.5** 
+- New command: `secfetch improve` → Scan for vulnerabilities; subsequent fix recommendation
+- New command: `secfetch improve --auto` performs simple fixes itself (with a list of changes and consent request)
 
-**v2.0** — `secfetch deepscan` with CVE lookups and system fingerprinting · AUR package
+**v2.0** 
+- `secfetch deepscan` with CVE lookups and system fingerprinting · AUR package
 
 ---
 
