@@ -1,5 +1,6 @@
 import sys
 import re
+import os
 from secfetch.core.scoring import calculate_score
 
 # ─────────────────────────────────────────────
@@ -33,15 +34,27 @@ LOGO_SHORT = [
 ]
 
 # display order and titles for categories
-CATEGORY_ORDER = ["system", "kernel_security", "kernel_hardening", "network", "filesystem"]
+CATEGORY_ORDER = [
+    "system",
+    "kernel_security",
+    "kernel_hardening",
+    "network",
+    "filesystem",
+]
 CATEGORY_TITLES = {
-    "system":            "System",
-    "kernel_security":   "Kernel Security",
-    "kernel_hardening":  "Kernel Hardening",
-    "network":           "Network",
-    "filesystem":        "Filesystem",
-}# color codes
-RED, YELLOW, GREEN, CYAN, RESET = "\033[31m", "\033[33m", "\033[32m", "\033[36m", "\033[0m"
+    "system": "System",
+    "kernel_security": "Kernel Security",
+    "kernel_hardening": "Kernel Hardening",
+    "network": "Network",
+    "filesystem": "Filesystem",
+}  # color codes
+RED, YELLOW, GREEN, CYAN, RESET = (
+    "\033[31m",
+    "\033[33m",
+    "\033[32m",
+    "\033[36m",
+    "\033[0m",
+)
 STATUS_COLORS = {"ok": GREEN, "warn": YELLOW, "bad": RED, "info": CYAN}
 
 
@@ -59,12 +72,13 @@ def score_bar(score: int, width: int = 15) -> str:
 
 # [CHANGED] helper to strip ANSI codes for accurate length calculation
 def _strip_ansi(text: str) -> str:
-    return re.sub(r'\033\[[0-9;]*m', '', text)
+    return re.sub(r"\033\[[0-9;]*m", "", text)
 
 
 # ─────────────────────────────────────────────
 #  Full output
 # ─────────────────────────────────────────────
+
 
 def print_results(results: list[dict]) -> None:
     score, cat_scores = calculate_score(results)
@@ -85,9 +99,13 @@ def print_results(results: list[dict]) -> None:
         for r in grouped[cat]:
             icon = colorize(r["status"], ICONS.get(r["status"], "•"))
             name = r["name"].ljust(22)
-            val  = r["value"] if "\033[" in r["value"] else colorize(r["status"], r["value"])  # [CHANGED]
+            val = (
+                r["value"]
+                if "\033[" in r["value"]
+                else colorize(r["status"], r["value"])
+            )  # [CHANGED]
             print(f"    {icon}  {name}  {val}")
-        print()# score section
+        print()  # score section
     print("  Security Score")
     print("  " + "─" * 40)
     for cat in CATEGORY_ORDER:
@@ -104,6 +122,7 @@ def print_results(results: list[dict]) -> None:
 # ─────────────────────────────────────────────
 #  Short output – Box variant
 # ─────────────────────────────────────────────
+
 
 def _short_box(results: list[dict]) -> None:
     score, _ = calculate_score(results)
@@ -140,6 +159,7 @@ def _short_box(results: list[dict]) -> None:
 #  Short output – Side variant
 # ─────────────────────────────────────────────
 
+
 def _short_side(results: list[dict]) -> None:
     score, _ = calculate_score(results)
 
@@ -159,11 +179,11 @@ def _short_side(results: list[dict]) -> None:
         f"  Firewall     {fmt('Firewall')}",
         f"  Ports        {fmt('Open Ports')}",
         f"  Score        {score_bar(score, width=12)}  {score}/100",
-    ]# print logo lines left, info lines right
+    ]  # print logo lines left, info lines right
     max_lines = max(len(LOGO_SHORT), len(info_lines))
     for i in range(max_lines):
-        left  = LOGO_SHORT[i]  if i < len(LOGO_SHORT)  else " " * 42
-        right = info_lines[i]  if i < len(info_lines)  else ""
+        left = LOGO_SHORT[i] if i < len(LOGO_SHORT) else " " * 42
+        right = info_lines[i] if i < len(info_lines) else ""
         print(left + right)
     print()
 
@@ -172,10 +192,9 @@ def _short_side(results: list[dict]) -> None:
 #  Entry points
 # ─────────────────────────────────────────────
 
+
 def print_results_short(results: list[dict]) -> None:
-    # route to correct short layout
     if SHORT_LAYOUT == "side":
         _short_side(results)
     else:
         _short_box(results)
-
