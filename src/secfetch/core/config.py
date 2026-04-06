@@ -45,12 +45,8 @@ def load_config() -> configparser.ConfigParser:
 def is_enabled(config: configparser.ConfigParser, check_name: str) -> bool:
     """
     Check if a security check is enabled in the configuration.
-    CRITICAL BUG FIX: Changed fallback from True to False to fix fastscan behavior.
 
-    - fastscan mode: only runs checks explicitly enabled in config (fallback=False needed)
-    - fullscan mode: runs all checks regardless of config (but this function isn't used for fullscan)
-
-    The previous fallback=True caused ALL unknown checks to run in fastscan, breaking the
-    entire purpose of having separate fast/full scan modes.
+    In fastscan mode only explicitly enabled checks run (fallback=False).
+    In fullscan mode this function is not called.
     """
     return config.getboolean("checks", check_name, fallback=False)

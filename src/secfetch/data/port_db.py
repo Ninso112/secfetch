@@ -69,7 +69,7 @@ def _download_csv():
         log_error(f"Failed to download port database: {e}")
 
 
-def _parse_csv(data: str):
+def _parse_csv(data: str) -> None:
     # Parse IANA CSV into _port_db
     # Columns: Service Name, Port Number, Transport Protocol, Description, ...
     global _port_db
@@ -124,7 +124,7 @@ def initialize():
         threading.Thread(target=_check_and_update, daemon=True).start()
 
 
-def get_port_info(port: int, proto: str = "TCP") -> tuple[str, str]:
+def get_port_info(port: int) -> tuple[str, str]:
     # Returns (service_name, risk_level)
     # risk_level: expected / unnecessary / suspicious / unknown
     with _lock:

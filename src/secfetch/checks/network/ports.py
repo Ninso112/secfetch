@@ -48,7 +48,7 @@ def check():
             key = (port_str, proto)
             if key not in seen:
                 seen.add(key)
-                name, risk = port_db.get_port_info(port_num, proto)
+                name, risk = port_db.get_port_info(port_num)
                 ports.append(
                     {
                         "port": port_str,

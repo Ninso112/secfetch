@@ -13,6 +13,9 @@ from secfetch.ui.colors import GREEN, ICONS, RED, RESET, YELLOW, colorize
 SHORT_LAYOUT = "box"
 # SHORT_LAYOUT = "side"
 
+_NAME_WIDTH = 22
+_CATEGORY_WIDTH = 20
+
 # ─────────────────────────────────────────────
 #  ASCII logo
 # ─────────────────────────────────────────────
@@ -88,7 +91,7 @@ def print_results(results: list[dict]) -> None:
         print("  " + "─" * 40)
         for r in grouped[cat]:
             icon = colorize(r["status"], ICONS.get(r["status"], "•"))
-            name = r["name"].ljust(22)
+            name = r["name"].ljust(_NAME_WIDTH)
             val = r["value"] if "\033[" in r["value"] else colorize(r["status"], r["value"])
             print(f"    {icon}  {name}  {val}")
         print()
@@ -98,11 +101,11 @@ def print_results(results: list[dict]) -> None:
     for cat in CATEGORY_ORDER:
         if cat not in cat_scores:
             continue
-        title = CATEGORY_TITLES.get(cat, cat).ljust(20)
+        title = CATEGORY_TITLES.get(cat, cat).ljust(_CATEGORY_WIDTH)
         s = cat_scores[cat]
         print(f"    {title}  {score_bar(s, width=12)}  {s}/100")
     print("  " + "─" * 40)
-    print(f"    {'Total'.ljust(20)}  {score_bar(score, width=12)}  {score}/100")
+    print(f"    {'Total'.ljust(_CATEGORY_WIDTH)}  {score_bar(score, width=12)}  {score}/100")
     print()
 
 

@@ -2,7 +2,7 @@
 import subprocess
 
 from secfetch.core.check import security_check
-from secfetch.core.error_handling import handle_check_errors  # ERROR HANDLING FIX
+from secfetch.core.error_handling import handle_check_errors
 
 # Services that increase attack surface or are known risks
 SUSPICIOUS = {
@@ -29,10 +29,9 @@ UNNECESSARY = {
 
 
 @security_check(name="Services", category="network", risk="medium")
-@handle_check_errors  # ERROR HANDLING FIX: Consistent error handling
+@handle_check_errors
 def check():
     """Find running services with systemctl and check against blacklists."""
-    # ERROR HANDLING FIX: Removed manual exception handling - now handled by decorator
     result = subprocess.run(
         [
             "systemctl",
