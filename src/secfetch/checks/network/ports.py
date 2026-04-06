@@ -24,6 +24,8 @@ def colorize_port(port_str: str, risk: str) -> str:
 def check():
     """Check for open network ports and classify by risk level."""
     result = subprocess.run(["ss", "-tulnp"], capture_output=True, text=True, timeout=5)
+    if result.returncode != 0:
+        return {"status": "info", "value": "scan unavailable"}
     ports = []
     seen = set()
     for line in result.stdout.splitlines():
@@ -62,7 +64,6 @@ def check():
     risk_order = {
         "suspicious": 3,
         "unnecessary": 2,
-        "warn": 1,
         "unknown": 1,
         "expected": 0,
         "info": 0,

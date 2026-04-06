@@ -33,7 +33,7 @@ UNNECESSARY = {
 def check():
     """Find running services with systemctl and check against blacklists."""
     # ERROR HANDLING FIX: Removed manual exception handling - now handled by decorator
-    out = subprocess.run(
+    result = subprocess.run(
         [
             "systemctl",
             "list-units",
@@ -45,9 +45,12 @@ def check():
         capture_output=True,
         text=True,
         timeout=5,
-    ).stdout
+    )
+    if result.returncode != 0:
+        return {"status": "info", "value": "check unavailable"}
 
     services = []
+    out = result.stdout
     for line in out.splitlines():
         parts = line.split()
         if parts:
