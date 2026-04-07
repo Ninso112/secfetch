@@ -9,6 +9,7 @@ from secfetch.ui.colors import BOLD, CYAN, GREEN, RED, RESET, YELLOW
 from secfetch.ui.help import CHECK_DESCRIPTIONS
 
 SYSCTL_FILE = "/etc/sysctl.d/99-secfetch.conf"
+_CMD_TIMEOUT = 30  # seconds for each apply command
 
 SYSCTL_PERSISTENT = {
     "aslr": ("kernel.randomize_va_space", "2"),
@@ -46,6 +47,7 @@ def _divider():
 
 
 def print_improve(results: list[dict]) -> None:
+    """Print a summary of failed checks with fix suggestions and auto-fixable tags."""
     failed = [r for r in results if r["status"] in ("bad", "warn")]
 
     if not failed:
@@ -84,7 +86,81 @@ def print_improve(results: list[dict]) -> None:
         print(f"  Run {CYAN}secfetch improve --auto{RESET} to select and apply fixes.\n")
 
 
+def _select_fixes(fixable: list[dict], manual_only: list[dict]) -> list[dict] | None:
+    """Run the interactive selection loop. Returns selected items or None if the user aborted."""
+    while True:
+        print(f"\n  {BOLD}Auto-Fix  —  secfetch improve --auto{RESET}")
+        _divider()
+        print()
+
+        for i, f in enumerate(fixable):
+            num = f"{i + 1}"
+            check = f"[{GREEN}✔{RESET}]" if f["selected"] else f"[{RED}✖{RESET}]"
+
+            if f["key"] == "services":
+                svc_str = ", ".join(f["services"])
+                print(f"    [{num}] {check}  {f['name']:<22}  disable {svc_str}")
+            else:
+                cmd_str = "  ".join(" ".join(cmd) for cmd in f["cmds"])
+                print(f"    [{num}] {check}  {f['name']:<22}  {cmd_str}")
+
+            if f["risky"]:
+                print(f"         {YELLOW}⚠  {RISKY_FIXES[f['key']]}{RESET}")
+
+        if manual_only:
+            print()
+            _divider()
+            print(f"  {BOLD}Require manual fix{RESET}  —  run {CYAN}secfetch improve{RESET} for details:")
+            print()
+            for r in manual_only:
+                icon = "✖" if r["status"] == "bad" else "⚠"
+                print(f"    {icon}  {r['name']:<22}  {r['value']}")
+
+        print()
+        _divider()
+
+        selected_count = sum(1 for f in fixable if f["selected"])
+        print(f"\n  {selected_count} fix(es) selected.")
+        print(f"  Toggle: {CYAN}1-{len(fixable)}{RESET} | {CYAN}a{RESET} = all | {CYAN}n{RESET} = none | {CYAN}Enter{RESET} = confirm | {CYAN}q{RESET} = quit")
+
+        try:
+            choice = input("\n  > ").strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            print("\n  Aborted.")
+            return None
+
+        if choice == "q":
+            print("  Aborted.")
+            return None
+
+        if choice == "":
+            return [f for f in fixable if f["selected"]]
+
+        if choice == "a":
+            for f in fixable:
+                f["selected"] = True
+            continue
+
+        if choice == "n":
+            for f in fixable:
+                f["selected"] = False
+            continue
+
+        nums = choice.replace(",", " ").split()
+        for n in nums:
+            try:
+                idx = int(n) - 1
+                if 0 <= idx < len(fixable):
+                    f = fixable[idx]
+                    f["selected"] = not f["selected"]
+                    if f["selected"] and f["risky"]:
+                        print(f"\n  {YELLOW}⚠  Warning: {RISKY_FIXES[f['key']]}{RESET}")
+            except ValueError:
+                pass
+
+
 def apply_fixes(results: list[dict]) -> None:
+    """Interactive auto-fix wizard: build a list of fixable issues, let the user select, then apply."""
     failed = [r for r in results if r["status"] in ("bad", "warn")]
 
     firewall_available = _check_firewall_available()
@@ -131,78 +207,10 @@ def apply_fixes(results: list[dict]) -> None:
             print("\n  ✔  All checks passed – nothing to fix.\n")
         return
 
-    while True:
-        print(f"\n  {BOLD}Auto-Fix  —  secfetch improve --auto{RESET}")
-        _divider()
-        print()
+    selected = _select_fixes(fixable, manual_only)
 
-        for i, f in enumerate(fixable):
-            num = f"{i + 1}"
-            check = f"[{GREEN}✔{RESET}]" if f["selected"] else f"[{RED}✖{RESET}]"
-
-            if f["key"] == "services":
-                svc_str = ", ".join(f["services"])
-                print(f"    [{num}] {check}  {f['name']:<22}  disable {svc_str}")
-            else:
-                cmd_str = "  ".join(" ".join(cmd) for cmd in f["cmds"])
-                print(f"    [{num}] {check}  {f['name']:<22}  {cmd_str}")
-
-            if f["risky"]:
-                print(f"         {YELLOW}⚠  {RISKY_FIXES[f['key']]}{RESET}")
-
-        if manual_only:
-            print()
-            _divider()
-            print(f"  {BOLD}Require manual fix{RESET}  —  run {CYAN}secfetch improve{RESET} for details:")
-            print()
-            for r in manual_only:
-                icon = "✖" if r["status"] == "bad" else "⚠"
-                print(f"    {icon}  {r['name']:<22}  {r['value']}")
-
-        print()
-        _divider()
-
-        selected_count = sum(1 for f in fixable if f["selected"])
-        print(f"\n  {selected_count} fix(es) selected.")
-        print(f"  Toggle: {CYAN}1-{len(fixable)}{RESET} | {CYAN}a{RESET} = all | {CYAN}n{RESET} = none | {CYAN}Enter{RESET} = confirm | {CYAN}q{RESET} = quit")
-
-        try:
-            choice = input("\n  > ").strip().lower()
-        except (EOFError, KeyboardInterrupt):
-            print("\n  Aborted.")
-            return
-
-        if choice == "q":
-            print("  Aborted.")
-            return
-
-        if choice == "":
-            break
-
-        if choice == "a":
-            for f in fixable:
-                f["selected"] = True
-            continue
-
-        if choice == "n":
-            for f in fixable:
-                f["selected"] = False
-            continue
-
-        nums = choice.replace(",", " ").split()
-        for n in nums:
-            try:
-                idx = int(n) - 1
-                if 0 <= idx < len(fixable):
-                    f = fixable[idx]
-                    f["selected"] = not f["selected"]
-                    if f["selected"] and f["risky"]:
-                        print(f"\n  {YELLOW}⚠  Warning: {RISKY_FIXES[f['key']]}{RESET}")
-            except ValueError:
-                pass
-
-    selected = [f for f in fixable if f["selected"]]
-
+    if selected is None:
+        return
     if not selected:
         print("  Nothing selected. Aborted.")
         return
@@ -298,6 +306,7 @@ def _apply_persistent_sysctl_config() -> None:
 
 
 def _check_firewall_available() -> bool:
+    """Return True if at least one supported firewall tool (ufw, firewalld, iptables) is installed."""
     if shutil.which("ufw"):
         return True
     if shutil.which("firewalld"):
@@ -308,8 +317,9 @@ def _check_firewall_available() -> bool:
 
 
 def _run_command(cmd: list) -> bool:
+    """Run a shell command list and print success/failure. Returns True on success."""
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=_CMD_TIMEOUT)
         if result.returncode == 0:
             print(f"    {GREEN}✔ Applied{RESET}")
             return True
@@ -318,7 +328,7 @@ def _run_command(cmd: list) -> bool:
             print(f"    {RED}✖ Failed: {err}{RESET}")
             return False
     except subprocess.TimeoutExpired:
-        print(f"    {RED}✖ Failed: Command timeout (30s){RESET}")
+        print(f"    {RED}✖ Failed: Command timeout ({_CMD_TIMEOUT}s){RESET}")
     except FileNotFoundError:
         cmd_name = cmd[0] if cmd else "unknown"
         if cmd_name == "ufw":

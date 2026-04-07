@@ -13,7 +13,7 @@ from secfetch.core.error_handling import handle_check_errors
 
 @security_check(name="World Writable", category="filesystem", risk="high")
 @handle_check_errors
-def world_writable():
+def world_writable() -> dict[str, str]:
     """Find world-writable files outside of expected locations."""
     cmd = [
         "find", "/",
@@ -41,7 +41,7 @@ def world_writable():
 
 @security_check(name="SUID Binaries", category="filesystem", risk="medium")
 @handle_check_errors
-def suid_binaries():
+def suid_binaries() -> dict[str, str]:
     """Find SUID binaries that could be privilege escalation vectors."""
     safe_suid_paths = {
         "/usr/bin/sudo", "/bin/su", "/usr/bin/su",
@@ -87,7 +87,7 @@ def suid_binaries():
 
 @security_check(name="/tmp noexec", category="filesystem", risk="medium")
 @handle_check_errors
-def tmp_noexec():
+def tmp_noexec() -> dict[str, str]:
     """Check if /tmp is mounted with noexec option."""
     with open("/proc/mounts", "r") as f:
         for line in f:
@@ -104,7 +104,7 @@ def tmp_noexec():
 
 @security_check(name="/tmp Sticky Bit", category="filesystem", risk="low")
 @handle_check_errors
-def sticky_tmp():
+def sticky_tmp() -> dict[str, str]:
     """Check if /tmp has the sticky bit set."""
     tmp_path = Path("/tmp")
     if not tmp_path.exists():

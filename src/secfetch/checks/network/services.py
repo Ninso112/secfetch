@@ -28,7 +28,7 @@ UNNECESSARY = {
 
 @security_check(name="Services", category="network", risk="medium")
 @handle_check_errors
-def check():
+def check() -> dict[str, str]:
     """Find running services with systemctl and check against blacklists."""
     result = safe_subprocess_run(
         [

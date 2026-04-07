@@ -15,6 +15,10 @@ SHORT_LAYOUT = "box"
 
 _NAME_WIDTH = 22
 _CATEGORY_WIDTH = 20
+_SCORE_BAR_WIDTH_FULL = 12   # score bar width in full/live output
+_SCORE_BAR_WIDTH_SHORT = 15  # score bar width in short output
+_SCORE_GOOD = 75             # threshold for green score bar
+_SCORE_WARN = 40             # threshold for yellow score bar
 
 # ─────────────────────────────────────────────
 #  ASCII logo
@@ -54,7 +58,7 @@ CATEGORY_TITLES = {
 def score_bar(score: int, width: int = 15) -> str:
     filled = int((score / 100) * width)
     bar = "█" * filled + "░" * (width - filled)
-    color = GREEN if score >= 75 else YELLOW if score >= 40 else RED
+    color = GREEN if score >= _SCORE_GOOD else YELLOW if score >= _SCORE_WARN else RED
     return f"{color}[{bar}]{RESET}"
 
 
@@ -103,9 +107,9 @@ def print_results(results: list[dict]) -> None:
             continue
         title = CATEGORY_TITLES.get(cat, cat).ljust(_CATEGORY_WIDTH)
         s = cat_scores[cat]
-        print(f"    {title}  {score_bar(s, width=12)}  {s}/100")
+        print(f"    {title}  {score_bar(s, width=_SCORE_BAR_WIDTH_FULL)}  {s}/100")
     print("  " + "─" * 40)
-    print(f"    {'Total'.ljust(_CATEGORY_WIDTH)}  {score_bar(score, width=12)}  {score}/100")
+    print(f"    {'Total'.ljust(_CATEGORY_WIDTH)}  {score_bar(score, width=_SCORE_BAR_WIDTH_FULL)}  {score}/100")
     print()
 
 
@@ -135,7 +139,7 @@ def _short_box(results: list[dict]) -> None:
         f"  {'System':<10}Kernel: {kernel:<20}  Secure Boot: {fmt('Secure Boot')}",
         f"  {'Security':<10}ASLR: {fmt('ASLR'):<22}  Lockdown: {fmt('Lockdown')}",
         f"  {'Network':<10}Firewall: {fmt('Firewall'):<18}  Ports: {fmt('Open Ports')}",
-        f"  {'Score':<10}{score_bar(score, width=15)}  {score}/100",
+        f"  {'Score':<10}{score_bar(score, width=_SCORE_BAR_WIDTH_SHORT)}  {score}/100",
     ]
 
     print()
@@ -166,7 +170,7 @@ def _short_side(results: list[dict]) -> None:
         f"  Lockdown     {fmt('Lockdown')}",
         f"  Firewall     {fmt('Firewall')}",
         f"  Ports        {fmt('Open Ports')}",
-        f"  Score        {score_bar(score, width=12)}  {score}/100",
+        f"  Score        {score_bar(score, width=_SCORE_BAR_WIDTH_FULL)}  {score}/100",
     ]
 
     max_lines = max(len(LOGO_SHORT), len(info_lines))

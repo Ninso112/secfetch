@@ -1,15 +1,17 @@
 # checks/network/firewall.py
+from __future__ import annotations
+
 from secfetch.core.check import security_check
 from secfetch.core.error_handling import handle_check_errors, safe_subprocess_run
 
 
-def _ufw_rules():
+def _ufw_rules() -> list[str]:
     # Parse ufw numbered rules
     result = safe_subprocess_run(["sudo", "ufw", "status", "numbered"], timeout=5)
     return [line.strip() for line in result.stdout.splitlines() if line.strip().startswith("[")]
 
 
-def _iptables_rules():
+def _iptables_rules() -> list[str]:
     # Count non-default iptables rules (skip chain headers and empty lines)
     result = safe_subprocess_run(["sudo", "iptables", "-L", "-n"], timeout=5)
     return [
@@ -19,7 +21,7 @@ def _iptables_rules():
     ]
 
 
-def _nft_rules():
+def _nft_rules() -> list[str]:
     # Count all non-empty, non-comment lines in the ruleset output
     result = safe_subprocess_run(["sudo", "nft", "list", "ruleset"], timeout=5)
     return [
@@ -33,7 +35,7 @@ def _nft_rules():
     name="Firewall Rules", category="network", risk="high"
 )
 @handle_check_errors
-def check():
+def check() -> dict[str, str]:
     # First check if ufw is enabled (most common on Ubuntu/Debian)
     result = safe_subprocess_run(["sudo", "ufw", "status"], timeout=5)
     if result.returncode == 0:

@@ -15,7 +15,8 @@ _discovered = False
 _discover_lock = threading.Lock()
 
 
-def register(check: dict):
+def register(check: dict) -> None:
+    """Add a check dict to the global registry. Called by the @security_check decorator."""
     _checks.append(check)
 
 
@@ -24,7 +25,7 @@ def get_checks() -> list[dict]:
 
 
 # ── Loader ────────────────────────────────────
-def _discover_checks():
+def _discover_checks() -> None:
     """Auto-import all check modules so decorators fire."""
     global _discovered
     with _discover_lock:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import glob
 import os
 
@@ -7,7 +9,7 @@ from secfetch.core.error_handling import handle_check_errors
 
 @security_check(name="Secure Boot", category="system", risk="medium")
 @handle_check_errors
-def check():
+def check() -> dict[str, str]:
     if not os.path.exists("/sys/firmware/efi"):
         return {"status": "warn", "value": "Not supported (Legacy BIOS)"}
     matches = glob.glob("/sys/firmware/efi/efivars/SecureBoot-*")

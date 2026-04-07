@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from secfetch.core.check import security_check
 from secfetch.core.error_handling import handle_check_errors
 
 
 @security_check(name="Lockdown", category="kernel_security", risk="medium")
 @handle_check_errors
-def check():
+def check() -> dict[str, str]:
     with open("/sys/kernel/security/lockdown") as f:
         content = f.read().strip()
     for token in content.split():

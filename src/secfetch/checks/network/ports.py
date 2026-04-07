@@ -20,7 +20,7 @@ def colorize_port(port_str: str, risk: str) -> str:
 
 @security_check(name="Open Ports", category="network", risk="medium")
 @handle_check_errors
-def check():
+def check() -> dict[str, str]:
     """Check for open network ports and classify by risk level."""
     result = safe_subprocess_run(["ss", "-tulnp"], timeout=5)
     if result.returncode != 0:
