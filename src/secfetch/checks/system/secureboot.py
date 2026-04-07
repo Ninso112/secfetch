@@ -7,7 +7,7 @@ from secfetch.core.check import security_check
 from secfetch.core.error_handling import handle_check_errors
 
 
-@security_check(name="Secure Boot", category="system", risk="medium")
+@security_check(name="Secure Boot", category="system", risk="high")
 @handle_check_errors
 def check() -> dict[str, str]:
     if not os.path.exists("/sys/firmware/efi"):

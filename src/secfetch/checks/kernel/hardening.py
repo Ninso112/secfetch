@@ -50,7 +50,7 @@ def check_ptrace() -> dict[str, str]:
     return _sysctl_check("/proc/sys/kernel/yama/ptrace_scope", _PTRACE)
 
 
-@security_check(name="Modules Disabled", category="kernel_hardening", risk="low")
+@security_check(name="Modules Disabled", category="kernel_hardening", risk="high")
 @handle_check_errors
 def check_modules() -> dict[str, str]:
     return _sysctl_check("/proc/sys/kernel/modules_disabled", _BOOL_WARN)

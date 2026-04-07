@@ -138,7 +138,7 @@ def _short_box(results: list[dict]) -> None:
     lines = [
         f"  {'System':<10}Kernel: {kernel:<20}  Secure Boot: {fmt('Secure Boot')}",
         f"  {'Security':<10}ASLR: {fmt('ASLR'):<22}  Lockdown: {fmt('Lockdown')}",
-        f"  {'Network':<10}Firewall: {fmt('Firewall'):<18}  Ports: {fmt('Open Ports')}",
+        f"  {'Network':<10}Firewall: {fmt('Firewall Rules'):<18}  Ports: {fmt('Open Ports')}",
         f"  {'Score':<10}{score_bar(score, width=_SCORE_BAR_WIDTH_SHORT)}  {score}/100",
     ]
 
@@ -168,7 +168,7 @@ def _short_side(results: list[dict]) -> None:
         f"  Secure Boot  {fmt('Secure Boot')}",
         f"  ASLR         {fmt('ASLR')}",
         f"  Lockdown     {fmt('Lockdown')}",
-        f"  Firewall     {fmt('Firewall')}",
+        f"  Firewall     {fmt('Firewall Rules')}",
         f"  Ports        {fmt('Open Ports')}",
         f"  Score        {score_bar(score, width=_SCORE_BAR_WIDTH_FULL)}  {score}/100",
     ]
