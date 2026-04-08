@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import functools
 import re
 
 from secfetch.core.scoring import calculate_score
-from secfetch.ui.colors import GREEN, ICONS, RED, RESET, YELLOW, colorize
+from secfetch.core.types import CheckResult
+from secfetch.ui.colors import CLEAR, GREEN, ICONS, RED, RESET, YELLOW, colorize
 
 # ─────────────────────────────────────────────
 #  Short mode layout selector
@@ -67,12 +69,12 @@ def _strip_ansi(text: str) -> str:
     return re.sub(r"\033\[[0-9;]*[A-Za-z]", "", text)
 
 
-def _fmt(results: list[dict], name: str) -> str:
-    """Format a single check result for short output modes."""
-    r = next((x for x in results if x["name"] == name), None)
-    if r is None:
+def _format_check_result(results: list[CheckResult], name: str) -> str:
+    """Format a single named check result for short output modes."""
+    result = next((x for x in results if x["name"] == name), None)
+    if result is None:
         return "N/A"
-    return colorize(r["status"], f"{ICONS.get(r['status'], '•')} {r['value']}")
+    return colorize(result["status"], f"{ICONS.get(result['status'], '•')} {result['value']}")
 
 
 # ─────────────────────────────────────────────
@@ -80,24 +82,24 @@ def _fmt(results: list[dict], name: str) -> str:
 # ─────────────────────────────────────────────
 
 
-def print_results(results: list[dict]) -> None:
+def print_results(results: list[CheckResult]) -> None:
     score, cat_scores = calculate_score(results)
 
     print(LOGO_FULL)
 
-    grouped = {}
-    for r in results:
-        grouped.setdefault(r["category"], []).append(r)
+    grouped: dict[str, list[CheckResult]] = {}
+    for result in results:
+        grouped.setdefault(result["category"], []).append(result)
 
     for cat in CATEGORY_ORDER:
         if cat not in grouped:
             continue
         print(f"  {CATEGORY_TITLES.get(cat, cat)}")
         print("  " + "─" * 40)
-        for r in grouped[cat]:
-            icon = colorize(r["status"], ICONS.get(r["status"], "•"))
-            name = r["name"].ljust(_NAME_WIDTH)
-            val = r["value"] if "\033[" in r["value"] else colorize(r["status"], r["value"])
+        for result in grouped[cat]:
+            icon = colorize(result["status"], ICONS.get(result["status"], "•"))
+            name = result["name"].ljust(_NAME_WIDTH)
+            val = result["value"] if "\033[" in result["value"] else colorize(result["status"], result["value"])
             print(f"    {icon}  {name}  {val}")
         print()
 
@@ -119,8 +121,8 @@ def print_results(results: list[dict]) -> None:
 # ─────────────────────────────────────────────
 
 
-def print_results_live(results: list[dict], interval: int) -> None:
-    print("\033[2J\033[H", end="", flush=True)
+def print_results_live(results: list[CheckResult], interval: int) -> None:
+    print(CLEAR, end="", flush=True)
     print_results(results)
     print(f"  Refreshing every {interval}s  —  Press Q + Enter to stop")
 
@@ -130,10 +132,9 @@ def print_results_live(results: list[dict], interval: int) -> None:
 # ─────────────────────────────────────────────
 
 
-def _short_box(results: list[dict]) -> None:
+def _short_box(results: list[CheckResult]) -> None:
     score, _ = calculate_score(results)
-    def fmt(name: str) -> str:
-        return _fmt(results, name)
+    fmt = functools.partial(_format_check_result, results)
     kernel = next((r["value"] for r in results if r["name"] == "Kernel"), "?")
 
     lines = [
@@ -158,10 +159,9 @@ def _short_box(results: list[dict]) -> None:
 # ─────────────────────────────────────────────
 
 
-def _short_side(results: list[dict]) -> None:
+def _short_side(results: list[CheckResult]) -> None:
     score, _ = calculate_score(results)
-    def fmt(name: str) -> str:
-        return _fmt(results, name)
+    fmt = functools.partial(_format_check_result, results)
     kernel = next((r["value"] for r in results if r["name"] == "Kernel"), "?")
 
     info_lines = [
@@ -187,7 +187,7 @@ def _short_side(results: list[dict]) -> None:
 # ─────────────────────────────────────────────
 
 
-def print_results_short(results: list[dict]) -> None:
+def print_results_short(results: list[CheckResult]) -> None:
     if SHORT_LAYOUT == "side":
         _short_side(results)
     else:

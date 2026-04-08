@@ -25,6 +25,9 @@ UNNECESSARY = {
     "avahi-daemon",
 }
 
+_SUSPICIOUS_LOWER: frozenset[str] = frozenset(s.lower() for s in SUSPICIOUS)
+_UNNECESSARY_LOWER: frozenset[str] = frozenset(s.lower() for s in UNNECESSARY)
+
 
 @security_check(name="Services", category="network", risk="medium")
 @handle_check_errors
@@ -56,10 +59,8 @@ def check() -> dict[str, str]:
         return {"status": "info", "value": "None detected"}
 
     total = len(services)
-    suspicious_lower = {s.lower() for s in SUSPICIOUS}
-    unnecessary_lower = {s.lower() for s in UNNECESSARY}
-    flagged_sus = [s for s in services if s.lower() in suspicious_lower]
-    flagged_unn = [s for s in services if s.lower() in unnecessary_lower]
+    flagged_sus = [s for s in services if s.lower() in _SUSPICIOUS_LOWER]
+    flagged_unn = [s for s in services if s.lower() in _UNNECESSARY_LOWER]
 
     if flagged_sus:
         names = ", ".join(sorted(flagged_sus))

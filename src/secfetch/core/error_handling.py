@@ -89,3 +89,15 @@ def safe_subprocess_run(
         # Return a fake result that indicates generic error
         result = subprocess.CompletedProcess(cmd, -1, default, "error")
         return result
+
+
+def sysctl_check(path: str, mapping: dict[str, tuple[str, str]]) -> dict[str, str]:
+    """Read a sysctl value from *path* and translate via *mapping* to a status/value dict.
+
+    Returns {"status": "info", "value": "not available"} if the path is unreadable
+    or the value is not present in the mapping.
+    """
+    val = safe_read_file(path, default=None)
+    if val is not None and val in mapping:
+        return {"status": mapping[val][0], "value": mapping[val][1]}
+    return {"status": "info", "value": "not available"}

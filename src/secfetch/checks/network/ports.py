@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import os
 
 from secfetch.core.check import security_check
 from secfetch.core.error_handling import handle_check_errors, safe_subprocess_run
+from secfetch.core.types import PortEntry
 from secfetch.data import port_db
 from secfetch.ui.colors import GREEN, RED, RESET, YELLOW
 
@@ -12,10 +15,48 @@ RISK_COLORS = {
     "suspicious": RED,
 }
 
+# Risk priority values — higher means greater concern
+_RISK_PRIORITY: dict[str, int] = {
+    "suspicious": 3,
+    "unnecessary": 2,
+    "unknown": 2,
+    "expected": 0,
+    "info": 0,
+}
+_RISK_THRESHOLD_BAD = 3
+_RISK_THRESHOLD_WARN = 2
+
 
 def colorize_port(port_str: str, risk: str) -> str:
     color = RISK_COLORS.get(risk, YELLOW)
     return f"{color}{port_str}{RESET}"
+
+
+def _parse_ports(stdout: str) -> list[PortEntry]:
+    """Parse ss -tulnp output into a deduplicated list of PortEntry dicts."""
+    ports: list[PortEntry] = []
+    seen: set[tuple[str, str]] = set()
+    for line in stdout.splitlines():
+        parts = line.split()
+        if len(parts) < 5 or ("LISTEN" not in line and "UNCONN" not in line):
+            continue
+        local = parts[4]
+        proto = "UDP" if "udp" in line.lower() else "TCP"
+        if ":" not in local:
+            continue
+        port_str = local.rsplit(":", 1)[-1]
+        try:
+            port_num = int(port_str)
+        except ValueError:
+            continue
+        if not (0 <= port_num <= 65535):
+            continue
+        key = (port_str, proto)
+        if key not in seen:
+            seen.add(key)
+            name, risk = port_db.get_port_info(port_num)
+            ports.append({"port": port_str, "name": name, "proto": proto, "risk": risk})
+    return ports
 
 
 @security_check(name="Open Ports", category="network", risk="medium")
@@ -25,62 +66,26 @@ def check() -> dict[str, str]:
     result = safe_subprocess_run(["ss", "-tulnp"], timeout=5)
     if result.returncode != 0:
         return {"status": "info", "value": "scan unavailable"}
-    ports = []
-    seen = set()
-    for line in result.stdout.splitlines():
-        parts = line.split()
-        if len(parts) < 5:
-            continue
-        if "LISTEN" not in line and "UNCONN" not in line:
-            continue
 
-        local = parts[4]
-        proto = "UDP" if "udp" in line.lower() else "TCP"
-
-        if ":" in local:
-            port_str = local.rsplit(":", 1)[-1]
-            try:
-                port_num = int(port_str)
-            except ValueError:
-                continue
-            if not (0 <= port_num <= 65535):
-                continue
-
-            key = (port_str, proto)
-            if key not in seen:
-                seen.add(key)
-                name, risk = port_db.get_port_info(port_num)
-                ports.append(
-                    {
-                        "port": port_str,
-                        "name": name,
-                        "proto": proto,
-                        "risk": risk,
-                    }
-                )
-
+    ports = _parse_ports(result.stdout)
     if not ports:
         return {"status": "ok", "value": "None"}
 
-    risk_order = {
-        "suspicious": 3,
-        "unnecessary": 2,
-        "unknown": 2,
-        "expected": 0,
-        "info": 0,
-    }
-    worst = max(ports, key=lambda p: risk_order.get(p["risk"], 0))
-    overall = "warn" if risk_order.get(worst["risk"], 0) >= 2 else "info"
-    if worst["risk"] == "suspicious":
+    worst = max(ports, key=lambda p: _RISK_PRIORITY.get(p["risk"], 0))
+    priority = _RISK_PRIORITY.get(worst["risk"], 0)
+    if priority >= _RISK_THRESHOLD_BAD:
         overall = "bad"
+    elif priority >= _RISK_THRESHOLD_WARN:
+        overall = "warn"
+    else:
+        overall = "info"
 
     short_mode = os.environ.get("SECFETCH_SHORT", "0") == "1"
 
-    def format_port(p: dict) -> str:
+    def format_port(p: PortEntry) -> str:
         if short_mode:
             return colorize_port(p["port"], p["risk"])
         return colorize_port(f"{p['port']} ({p['name']}/{p['proto']})", p["risk"])
 
     value = ", ".join(format_port(p) for p in sorted(ports, key=lambda p: int(p["port"])))
-
     return {"status": overall, "value": value}

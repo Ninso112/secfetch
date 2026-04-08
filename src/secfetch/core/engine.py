@@ -9,19 +9,20 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import secfetch.checks
 from secfetch.core.config import is_enabled, load_config
 from secfetch.core.logger import log_error
+from secfetch.core.types import CheckRegistration, CheckResult
 
 # ── Registry ──────────────────────────────────
-_checks: list[dict] = []
+_checks: list[CheckRegistration] = []
 _discovered = False
 _discover_lock = threading.Lock()
 
 
-def register(check: dict) -> None:
+def register(check: CheckRegistration) -> None:
     """Add a check dict to the global registry. Called by the @security_check decorator."""
     _checks.append(check)
 
 
-def get_checks() -> list[dict]:
+def get_checks() -> list[CheckRegistration]:
     return list(_checks)
 
 
@@ -44,7 +45,7 @@ def _discover_checks() -> None:
 
 
 # ── Runner ────────────────────────────────────
-def _run_single(check: dict) -> dict:
+def _run_single(check: CheckRegistration) -> CheckResult:
     """Execute one check and return a fully-populated result dict."""
     try:
         raw = check["run"]()
@@ -68,7 +69,7 @@ def _run_single(check: dict) -> dict:
         }
 
 
-def run_checks(fast: bool = False) -> list[dict]:
+def run_checks(fast: bool = False) -> list[CheckResult]:
     config = load_config()
     _discover_checks()
 
@@ -77,9 +78,9 @@ def run_checks(fast: bool = False) -> list[dict]:
         if not (fast and not is_enabled(config, c["name"].lower().replace(" ", "_")))
     ]
 
-    results: list[dict] = [None] * len(active)  # type: ignore[list-item]
+    index_results: dict[int, CheckResult] = {}
     with ThreadPoolExecutor(max_workers=8) as executor:
         futures = {executor.submit(_run_single, c): i for i, c in enumerate(active)}
         for future in as_completed(futures):
-            results[futures[future]] = future.result()
-    return results
+            index_results[futures[future]] = future.result()
+    return [index_results[i] for i in range(len(active))]

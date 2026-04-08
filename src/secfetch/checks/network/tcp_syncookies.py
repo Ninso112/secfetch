@@ -1,16 +1,14 @@
 from __future__ import annotations
 
 from secfetch.core.check import security_check
-from secfetch.core.error_handling import safe_read_file
+from secfetch.core.error_handling import sysctl_check
+
+_TCP_SYN = {
+    "1": ("ok", "Enabled"),
+    "0": ("bad", "Disabled"),
+}
 
 
 @security_check(name="TCP SYN Cookies", category="network", risk="medium")
 def check() -> dict[str, str]:
-    val = safe_read_file("/proc/sys/net/ipv4/tcp_syncookies", default=None)
-    if val is None:
-        return {"status": "info", "value": "not available"}
-    if val == "1":
-        return {"status": "ok", "value": "Enabled"}
-    if val == "0":
-        return {"status": "bad", "value": "Disabled"}
-    return {"status": "info", "value": f"Unknown value: {val}"}
+    return sysctl_check("/proc/sys/net/ipv4/tcp_syncookies", _TCP_SYN)

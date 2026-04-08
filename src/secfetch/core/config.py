@@ -32,13 +32,23 @@ services = false
 """
 
 
+_config_cache: configparser.ConfigParser | None = None
+_config_cache_path: Path | None = None
+
+
 def load_config() -> configparser.ConfigParser:
-    # Create default config on first run, then read it
+    # Create default config on first run, then read and cache it.
+    # Cache is invalidated when CONFIG_PATH changes (e.g. in tests).
+    global _config_cache, _config_cache_path
+    if _config_cache is not None and _config_cache_path == CONFIG_PATH:
+        return _config_cache
     config = configparser.ConfigParser()
     if not CONFIG_PATH.exists():
         CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
         CONFIG_PATH.write_text(DEFAULT_CONFIG.strip())
     config.read(CONFIG_PATH)
+    _config_cache = config
+    _config_cache_path = CONFIG_PATH
     return config
 
 

@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from secfetch.core.types import CategoryAccumulator, CheckResult
+
 WEIGHTS = {"high": 30, "medium": 20, "low": 10, "info": 0}
 
 
-def calculate_score(results: list[dict]) -> tuple[int, dict]:
+def calculate_score(results: list[CheckResult]) -> tuple[int, dict[str, int]]:
     # Calculate overall + per-category security score
-    total, earned, categories = 0, 0, {}
+    total, earned = 0, 0
+    categories: dict[str, CategoryAccumulator] = {}
 
     for result in results:
         weight = WEIGHTS.get(result["risk"], 0)
