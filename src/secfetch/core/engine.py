@@ -4,6 +4,7 @@ from __future__ import annotations
 import importlib
 import pkgutil
 import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import secfetch.checks
 from secfetch.core.config import is_enabled, load_config
@@ -43,35 +44,42 @@ def _discover_checks() -> None:
 
 
 # ── Runner ────────────────────────────────────
+def _run_single(check: dict) -> dict:
+    """Execute one check and return a fully-populated result dict."""
+    try:
+        raw = check["run"]()
+        if not isinstance(raw, dict) or "status" not in raw or "value" not in raw:
+            raw = {"status": "info", "value": "invalid check result"}
+        raw.update(
+            {
+                "name": check["name"],
+                "category": check["category"],
+                "risk": check["risk"],
+            }
+        )
+        return raw
+    except Exception as e:
+        return {
+            "name": check["name"],
+            "category": check["category"],
+            "risk": check["risk"],
+            "status": "info",
+            "value": f"Error: {e}",
+        }
+
+
 def run_checks(fast: bool = False) -> list[dict]:
     config = load_config()
     _discover_checks()
 
-    results = []
-    for check in _checks:
-        key = check["name"].lower().replace(" ", "_")
-        if fast and not is_enabled(config, key):
-            continue
-        try:
-            raw = check["run"]()
-            if not isinstance(raw, dict) or "status" not in raw or "value" not in raw:
-                raw = {"status": "info", "value": "invalid check result"}
-            raw.update(
-                {
-                    "name": check["name"],
-                    "category": check["category"],
-                    "risk": check["risk"],
-                }
-            )
-            results.append(raw)
-        except Exception as e:
-            results.append(
-                {
-                    "name": check["name"],
-                    "category": check["category"],
-                    "risk": check["risk"],
-                    "status": "info",
-                    "value": f"Error: {e}",
-                }
-            )
+    active = [
+        c for c in _checks
+        if not (fast and not is_enabled(config, c["name"].lower().replace(" ", "_")))
+    ]
+
+    results: list[dict] = [None] * len(active)  # type: ignore[list-item]
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        futures = {executor.submit(_run_single, c): i for i, c in enumerate(active)}
+        for future in as_completed(futures):
+            results[futures[future]] = future.result()
     return results

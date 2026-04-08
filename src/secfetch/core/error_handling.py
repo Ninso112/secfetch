@@ -5,6 +5,8 @@ import functools
 import subprocess
 from typing import Any, Callable, Dict
 
+SUBPROCESS_TIMEOUT: int = 5  # Default timeout in seconds for all subprocess calls
+
 
 def handle_check_errors(func: Callable) -> Callable:
     """
@@ -54,7 +56,7 @@ def safe_read_file(file_path: str, default: str | None = "not available") -> str
 
 
 def safe_subprocess_run(
-    cmd: list, timeout: int = 5, default: str = ""
+    cmd: list, timeout: int = SUBPROCESS_TIMEOUT, default: str = ""
 ) -> subprocess.CompletedProcess:
     """
     Safely run subprocess with consistent error handling.
