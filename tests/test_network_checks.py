@@ -296,3 +296,41 @@ class TestFirewallRules:
         with patch("secfetch.checks.network.firewall.safe_subprocess_run", side_effect=mock_run):
             result = check()
         assert "3" in result["value"]
+
+
+class TestParsePortsEdgeCases:
+    """Edge cases for _parse_ports() in ports.py."""
+
+    def _run(self, stdout):
+        from secfetch.checks.network.ports import _parse_ports
+        with patch("secfetch.data.port_db.get_port_info", return_value=("unknown", "info")):
+            return _parse_ports(stdout)
+
+    def test_ipv6_scope_id_parsed_correctly(self):
+        """IPv6 address with scope ID like [fe80::1%eth0]:22 should parse port 22."""
+        result = self._run(
+            "Netid State Recv-Q Send-Q Local Address:Port\n"
+            "tcp   LISTEN 0      128    [fe80::1%eth0]:22\n"
+        )
+        assert any(p["port"] == "22" for p in result)
+
+    def test_malformed_line_without_port_is_skipped(self):
+        """Lines without a parseable port number should be silently skipped."""
+        result = self._run(
+            "Netid State Recv-Q Send-Q Local Address:Port\n"
+            "tcp   LISTEN 0      128    invalid-no-port\n"
+        )
+        assert result == []
+
+    def test_out_of_range_port_is_skipped(self):
+        """Port numbers outside 0-65535 should be skipped."""
+        result = self._run(
+            "Netid State Recv-Q Send-Q Local Address:Port\n"
+            "tcp   LISTEN 0      128    0.0.0.0:99999\n"
+        )
+        assert result == []
+
+    def test_corrupt_ss_output_does_not_crash(self):
+        """Completely malformed ss output should return empty list without exception."""
+        result = self._run("GARBAGE\x00DATA\nNot a real line\n")
+        assert isinstance(result, list)

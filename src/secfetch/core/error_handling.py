@@ -5,6 +5,8 @@ import functools
 import subprocess
 from typing import Any, Callable, Dict
 
+from secfetch.core.logger import log_debug
+
 SUBPROCESS_TIMEOUT: int = 5  # Default timeout in seconds for all subprocess calls
 
 
@@ -28,8 +30,9 @@ def handle_check_errors(func: Callable) -> Callable:
             return {"status": "info", "value": "scan timeout"}
         except subprocess.CalledProcessError:
             return {"status": "info", "value": "check unavailable"}
-        except Exception:
-            # Don't expose internal exception details to users
+        except Exception as e:
+            # Don't expose internal exception details to users, but log for debugging
+            log_debug(f"Unexpected error in {func.__name__}: {type(e).__name__}: {e}")
             return {"status": "info", "value": "check unavailable"}
 
     return wrapper
@@ -51,7 +54,7 @@ def safe_read_file(file_path: str, default: str | None = "not available") -> str
             return f.read().strip()
     except (FileNotFoundError, PermissionError):
         return default
-    except Exception:
+    except (UnicodeDecodeError, OSError):
         return default
 
 
@@ -85,9 +88,8 @@ def safe_subprocess_run(
         # Return a fake result that indicates command not found
         result = subprocess.CompletedProcess(cmd, -1, default, "command not found")
         return result
-    except Exception:
-        # Return a fake result that indicates generic error
-        result = subprocess.CompletedProcess(cmd, -1, default, "error")
+    except OSError as e:
+        result = subprocess.CompletedProcess(cmd, -1, default, f"error: {e}")
         return result
 
 

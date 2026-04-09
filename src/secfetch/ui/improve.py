@@ -121,6 +121,7 @@ def _select_fixes(fixable: list[FixItem], manual_only: list[CheckResult]) -> lis
             continue
 
         nums = choice.replace(",", " ").split()
+        invalid = []
         for n in nums:
             try:
                 idx = int(n) - 1
@@ -130,7 +131,9 @@ def _select_fixes(fixable: list[FixItem], manual_only: list[CheckResult]) -> lis
                     if fix_item["selected"] and fix_item["risky"]:
                         print(f"\n  {YELLOW}⚠  Warning: {RISKY_FIXES[fix_item['key']]}{RESET}")
             except ValueError:
-                pass
+                invalid.append(n)
+        if invalid:
+            print(f"  Ungültige Eingabe ignoriert: {', '.join(invalid)}")
 
 
 def _build_fixable_list(

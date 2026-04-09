@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 
 from secfetch.core.check import security_check
 from secfetch.core.error_handling import handle_check_errors, safe_subprocess_run
@@ -26,6 +27,15 @@ _RISK_PRIORITY: dict[str, int] = {
 _RISK_THRESHOLD_BAD = 3
 _RISK_THRESHOLD_WARN = 2
 
+# Matches port from ss local-address: handles IPv4, IPv6 brackets, and scope IDs
+_PORT_RE = re.compile(r"(?:\[.*\]|[^:]+):(\d+)$")
+
+
+def _extract_port(local: str) -> str | None:
+    """Extract port string from ss local-address field."""
+    m = _PORT_RE.search(local)
+    return m.group(1) if m else None
+
 
 def colorize_port(port_str: str, risk: str) -> str:
     color = RISK_COLORS.get(risk, YELLOW)
@@ -42,9 +52,9 @@ def _parse_ports(stdout: str) -> list[PortEntry]:
             continue
         local = parts[4]
         proto = "UDP" if "udp" in line.lower() else "TCP"
-        if ":" not in local:
+        port_str = _extract_port(local)
+        if port_str is None:
             continue
-        port_str = local.rsplit(":", 1)[-1]
         try:
             port_num = int(port_str)
         except ValueError:

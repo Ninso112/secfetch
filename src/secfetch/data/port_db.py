@@ -5,6 +5,8 @@ import threading
 import urllib.request
 from pathlib import Path
 
+from secfetch.core.logger import log_error
+
 # Cache location
 CACHE_DIR = Path.home() / ".cache" / "secfetch"
 CACHE_FILE = CACHE_DIR / "port_db.csv"
@@ -65,7 +67,6 @@ def _download_csv() -> None:
         CACHE_FILE.with_suffix(".timestamp").write_text(last_modified)
         _parse_csv(data)
     except Exception as e:
-        from secfetch.core.logger import log_error
         log_error(f"Failed to download port database: {e}")
 
 
@@ -113,10 +114,8 @@ def initialize() -> None:
         # No cache: try to download immediately (first run)
         _download_csv()
         with _lock:
-            db_empty = not _port_db
-        if db_empty:
-            # Download failed (no network): use fallback
-            with _lock:
+            if not _port_db:
+                # Download failed (no network): use fallback
                 for port, (name, _risk) in FALLBACK_PORTS.items():
                     _port_db[port] = (name, "TCP")
     else:
