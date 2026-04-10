@@ -1,4 +1,5 @@
 """Central engine: discovers, registers and runs all checks."""
+
 from __future__ import annotations
 
 import importlib
@@ -15,15 +16,18 @@ from secfetch.core.types import CheckRegistration, CheckResult
 _checks: list[CheckRegistration] = []
 _discovered = False
 _discover_lock = threading.Lock()
+_registry_lock = threading.Lock()
 
 
 def register(check: CheckRegistration) -> None:
     """Add a check dict to the global registry. Called by the @security_check decorator."""
-    _checks.append(check)
+    with _registry_lock:
+        _checks.append(check)
 
 
 def get_checks() -> list[CheckRegistration]:
-    return list(_checks)
+    with _registry_lock:
+        return list(_checks)
 
 
 # ── Loader ────────────────────────────────────
@@ -74,13 +78,15 @@ def run_checks(fast: bool = False) -> list[CheckResult]:
     _discover_checks()
 
     active = [
-        c for c in _checks
+        c
+        for c in _checks
         if not (fast and not is_enabled(config, c["name"].lower().replace(" ", "_")))
     ]
 
-    index_results: dict[int, CheckResult] = {}
+    results: list[CheckResult | None] = [None] * len(active)
     with ThreadPoolExecutor(max_workers=8) as executor:
         futures = {executor.submit(_run_single, c): i for i, c in enumerate(active)}
         for future in as_completed(futures):
-            index_results[futures[future]] = future.result()
-    return [index_results[i] for i in range(len(active))]
+            idx = futures[future]
+            results[idx] = future.result()
+    return [r for r in results if r is not None]

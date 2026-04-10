@@ -84,7 +84,9 @@ def _select_fixes(fixable: list[FixItem], manual_only: list[CheckResult]) -> lis
         if manual_only:
             print()
             _divider()
-            print(f"  {BOLD}Require manual fix{RESET}  —  run {CYAN}secfetch improve{RESET} for details:")
+            print(
+                f"  {BOLD}Require manual fix{RESET}  —  run {CYAN}secfetch improve{RESET} for details:"
+            )
             print()
             for result in manual_only:
                 icon = "✖" if result["status"] == "bad" else "⚠"
@@ -95,7 +97,9 @@ def _select_fixes(fixable: list[FixItem], manual_only: list[CheckResult]) -> lis
 
         selected_count = sum(1 for fix_item in fixable if fix_item["selected"])
         print(f"\n  {selected_count} fix(es) selected.")
-        print(f"  Toggle: {CYAN}1-{len(fixable)}{RESET} | {CYAN}a{RESET} = all | {CYAN}n{RESET} = none | {CYAN}Enter{RESET} = confirm | {CYAN}q{RESET} = quit")
+        print(
+            f"  Toggle: {CYAN}1-{len(fixable)}{RESET} | {CYAN}a{RESET} = all | {CYAN}n{RESET} = none | {CYAN}Enter{RESET} = confirm | {CYAN}q{RESET} = quit"
+        )
 
         try:
             choice = input("\n  > ").strip().lower()
@@ -133,7 +137,7 @@ def _select_fixes(fixable: list[FixItem], manual_only: list[CheckResult]) -> lis
             except ValueError:
                 invalid.append(n)
         if invalid:
-            print(f"  Ungültige Eingabe ignoriert: {', '.join(invalid)}")
+            print(f"  Invalid input ignored: {', '.join(invalid)}")
 
 
 def _build_fixable_list(
@@ -148,36 +152,43 @@ def _build_fixable_list(
         if key == "firewall_rules" and not firewall_available:
             continue
         if key in AUTO_FIXES:
-            fixable.append({
-                "name": result["name"],
-                "key": key,
-                "cmds": list(AUTO_FIXES[key]),
-                "risky": key in RISKY_FIXES,
-                "selected": key not in RISKY_FIXES,
-                "services": [],
-            })
+            fixable.append(
+                {
+                    "name": result["name"],
+                    "key": key,
+                    "cmds": list(AUTO_FIXES[key]),
+                    "risky": key in RISKY_FIXES,
+                    "selected": key not in RISKY_FIXES,
+                    "services": [],
+                }
+            )
 
     manual_only = [
-        result for result in failed
-        if result["name"].lower().replace(" ", "_") not in AUTO_FIXES
+        result for result in failed if result["name"].lower().replace(" ", "_") not in AUTO_FIXES
     ]
     if not firewall_available:
         fw = next(
-            (result for result in failed if result["name"].lower().replace(" ", "_") == "firewall_rules"),
+            (
+                result
+                for result in failed
+                if result["name"].lower().replace(" ", "_") == "firewall_rules"
+            ),
             None,
         )
         if fw:
             manual_only.append(fw)
 
     if suspicious_services:
-        fixable.append({
-            "name": "Suspicious Services",
-            "key": "services",
-            "cmds": [["sudo", "systemctl", "disable", "--now", s] for s in suspicious_services],
-            "risky": False,
-            "selected": True,
-            "services": list(suspicious_services),
-        })
+        fixable.append(
+            {
+                "name": "Suspicious Services",
+                "key": "services",
+                "cmds": [["sudo", "systemctl", "disable", "--now", s] for s in suspicious_services],
+                "risky": False,
+                "selected": True,
+                "services": list(suspicious_services),
+            }
+        )
 
     return fixable, manual_only
 
@@ -247,7 +258,9 @@ def apply_fixes(results: list[CheckResult]) -> None:
                     sysctl_applied = True
                     print(f"    {GREEN}✓ Persisted to {SYSCTL_FILE}{RESET}")
                 else:
-                    print(f"    {YELLOW}⚠ Could not persist to {SYSCTL_FILE} (permission denied){RESET}")
+                    print(
+                        f"    {YELLOW}⚠ Could not persist to {SYSCTL_FILE} (permission denied){RESET}"
+                    )
 
     if sysctl_applied:
         _apply_persistent_sysctl_config()
@@ -255,13 +268,18 @@ def apply_fixes(results: list[CheckResult]) -> None:
 
 
 def _extract_suspicious_services(results: list[CheckResult]) -> set[str]:
+    """Extract suspicious service names from the Services check result.
+
+    Parses the value field which has format: "N running, suspicious: svc1, svc2"
+    or "N running, unnecessary: svc1, svc2".
+    """
     for result in results:
         if result["name"].lower() == "services":
             value = result.get("value", "")
             if ":" not in value:
                 return set()
-            after_colon = value.split(":", 1)[1]
-            mentioned = {s.strip() for s in after_colon.split(",")}
+            _, after_colon = value.split(":", 1)
+            mentioned = {s.strip() for s in after_colon.split(",") if s.strip()}
             return {s for s in mentioned if s.lower() in _SUSPICIOUS_SERVICES_LOWER}
     return set()
 
@@ -323,7 +341,9 @@ def _run_command(cmd: list[str]) -> bool:
     except FileNotFoundError:
         cmd_name = cmd[0] if cmd else "unknown"
         if cmd_name == "ufw":
-            print(f"    {RED}✖ Failed: ufw not installed. Install with: sudo apt install ufw{RESET}")
+            print(
+                f"    {RED}✖ Failed: ufw not installed. Install with: sudo apt install ufw{RESET}"
+            )
         else:
             print(f"    {RED}✖ Failed: Command not found{RESET}")
     except Exception as e:

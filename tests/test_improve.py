@@ -1,8 +1,7 @@
 """Tests for pure utility functions in ui/improve.py."""
+
 from pathlib import Path
 from unittest.mock import patch
-
-import pytest
 
 from secfetch.ui.improve import (
     _extract_suspicious_services,
@@ -10,12 +9,14 @@ from secfetch.ui.improve import (
     _write_sysctl_config,
 )
 
-
 # ─── _extract_suspicious_services ────────────────────────────────────────────
+
 
 class TestExtractSuspiciousServices:
     def test_returns_matching_suspicious_services(self):
-        results = [{"name": "Services", "status": "bad", "value": "5 running, suspicious: telnetd, ftpd"}]
+        results = [
+            {"name": "Services", "status": "bad", "value": "5 running, suspicious: telnetd, ftpd"}
+        ]
         found = _extract_suspicious_services(results)
         assert "telnetd" in found
         assert "ftpd" in found
@@ -59,6 +60,7 @@ class TestExtractSuspiciousServices:
 
 # ─── _write_sysctl_config ─────────────────────────────────────────────────────
 
+
 class TestWriteSysctlConfig:
     def test_creates_file_with_param(self, tmp_path, monkeypatch):
         target = tmp_path / "99-secfetch.conf"
@@ -88,6 +90,7 @@ class TestWriteSysctlConfig:
     def test_returns_false_on_permission_error(self, monkeypatch):
         def raise_permission(*args, **kwargs):
             raise PermissionError("denied")
+
         monkeypatch.setattr(Path, "write_text", raise_permission)
         result = _write_sysctl_config("kernel.kptr_restrict", "2")
         assert result is False
@@ -95,15 +98,18 @@ class TestWriteSysctlConfig:
 
 # ─── _select_fixes ────────────────────────────────────────────────────────────
 
+
 class TestSelectFixes:
     def _make_fixable(self, selected=True, risky=False):
-        return [{
-            "name": "ASLR",
-            "key": "aslr",
-            "cmds": [["sudo", "sysctl", "-w", "kernel.randomize_va_space=2"]],
-            "risky": risky,
-            "selected": selected,
-        }]
+        return [
+            {
+                "name": "ASLR",
+                "key": "aslr",
+                "cmds": [["sudo", "sysctl", "-w", "kernel.randomize_va_space=2"]],
+                "risky": risky,
+                "selected": selected,
+            }
+        ]
 
     def test_quit_returns_none(self):
         with patch("builtins.input", return_value="q"):
@@ -163,3 +169,11 @@ class TestSelectFixes:
         with patch("builtins.input", side_effect=["xyz", ""]):
             result = _select_fixes(fixable, [])
         assert len(result) == 1
+
+    def test_invalid_input_message_is_english(self, capsys):
+        fixable = self._make_fixable(selected=True)
+        with patch("builtins.input", side_effect=["xyz", ""]):
+            _select_fixes(fixable, [])
+        captured = capsys.readouterr()
+        assert "Invalid input ignored" in captured.out
+        assert "Ungültige" not in captured.out

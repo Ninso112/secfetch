@@ -1,9 +1,17 @@
 """Tests for secfetch logger module."""
+
 import logging
 import threading
 
 import secfetch.core.logger as logger_module
-from secfetch.core.logger import get_logger, log_debug, log_error, log_info, log_warning, setup_logger
+from secfetch.core.logger import (
+    get_logger,
+    log_debug,
+    log_error,
+    log_info,
+    log_warning,
+    setup_logger,
+)
 
 
 class TestSetupLogger:
@@ -20,7 +28,8 @@ class TestSetupLogger:
     def test_console_handler_level_is_warning(self):
         logger = setup_logger("test_setup_unique_3")
         stream_handlers = [
-            h for h in logger.handlers
+            h
+            for h in logger.handlers
             if isinstance(h, logging.StreamHandler) and not isinstance(h, logging.FileHandler)
         ]
         assert any(h.level == logging.WARNING for h in stream_handlers)

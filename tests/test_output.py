@@ -1,6 +1,7 @@
 """Tests for pure utility functions in ui/output.py."""
+
 from secfetch.ui.colors import GREEN, RED, RESET, YELLOW
-from secfetch.ui.output import _SCORE_GOOD, _SCORE_WARN, score_bar
+from secfetch.ui.output import _SCORE_GOOD, _SCORE_WARN, _has_ansi, _strip_ansi, score_bar
 
 
 class TestScoreBar:
@@ -40,9 +41,7 @@ class TestScoreBar:
 
     def test_width_controls_bar_length(self):
         result = score_bar(50, width=10)
-        # strip ANSI codes to count bar characters
         inner = result.replace(GREEN, "").replace(YELLOW, "").replace(RED, "").replace(RESET, "")
-        # inner is "[<bar>]"
         bar_content = inner[1:-1]
         assert len(bar_content) == 10
 
@@ -63,3 +62,22 @@ class TestScoreBar:
         inner = result.replace(GREEN, "").replace(YELLOW, "").replace(RED, "").replace(RESET, "")
         assert inner.startswith("[")
         assert inner.endswith("]")
+
+
+class TestAnsiHelpers:
+    def test_has_ansi_detects_escape_sequence(self):
+        assert _has_ansi("\033[31mred") is True
+        assert _has_ansi("\033[1;32mgreen") is True
+        assert _has_ansi("\033[0mreset") is True
+
+    def test_has_ansi_returns_false_for_plain_text(self):
+        assert _has_ansi("plain text") is False
+        assert _has_ansi("") is False
+        assert _has_ansi("no codes here 123") is False
+
+    def test_strip_ansi_removes_codes(self):
+        assert _strip_ansi("\033[31mred\033[0m") == "red"
+        assert _strip_ansi("\033[1;32mgreen") == "green"
+
+    def test_strip_ansi_leaves_plain_text(self):
+        assert _strip_ansi("plain text") == "plain text"

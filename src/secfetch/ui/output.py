@@ -17,10 +17,10 @@ SHORT_LAYOUT = "box"
 
 _NAME_WIDTH = 22
 _CATEGORY_WIDTH = 20
-_SCORE_BAR_WIDTH_FULL = 12   # score bar width in full/live output
+_SCORE_BAR_WIDTH_FULL = 12  # score bar width in full/live output
 _SCORE_BAR_WIDTH_SHORT = 15  # score bar width in short output
-_SCORE_GOOD = 75             # threshold for green score bar
-_SCORE_WARN = 40             # threshold for yellow score bar
+_SCORE_GOOD = 75  # threshold for green score bar
+_SCORE_WARN = 40  # threshold for yellow score bar
 
 
 # ─────────────────────────────────────────────
@@ -58,6 +58,7 @@ CATEGORY_TITLES = {
     "filesystem": "Filesystem",
 }
 
+
 def score_bar(score: int, width: int = 15) -> str:
     filled = int((score / 100) * width)
     bar = "█" * filled + "░" * (width - filled)
@@ -65,8 +66,19 @@ def score_bar(score: int, width: int = 15) -> str:
     return f"{color}[{bar}]{RESET}"
 
 
+_ANSI_RE = re.compile(r"\033\[[0-9;]*[A-Za-z]")
+
+
+def _has_ansi(text: str) -> bool:
+    return bool(_ANSI_RE.search(text))
+
+
 def _strip_ansi(text: str) -> str:
-    return re.sub(r"\033\[[0-9;]*[A-Za-z]", "", text)
+    return _ANSI_RE.sub("", text)
+
+
+def _strip_ansi(text: str) -> str:
+    return _ANSI_RE.sub("", text)
 
 
 def _format_check_result(results: list[CheckResult], name: str) -> str:
@@ -99,7 +111,11 @@ def print_results(results: list[CheckResult]) -> None:
         for result in grouped[cat]:
             icon = colorize(result["status"], ICONS.get(result["status"], "•"))
             name = result["name"].ljust(_NAME_WIDTH)
-            val = result["value"] if "\033[" in result["value"] else colorize(result["status"], result["value"])
+            val = (
+                result["value"]
+                if _has_ansi(result["value"])
+                else colorize(result["status"], result["value"])
+            )
             print(f"    {icon}  {name}  {val}")
         print()
 
@@ -112,7 +128,9 @@ def print_results(results: list[CheckResult]) -> None:
         s = cat_scores[cat]
         print(f"    {title}  {score_bar(s, width=_SCORE_BAR_WIDTH_FULL)}  {s}/100")
     print("  " + "─" * 40)
-    print(f"    {'Total'.ljust(_CATEGORY_WIDTH)}  {score_bar(score, width=_SCORE_BAR_WIDTH_FULL)}  {score}/100")
+    print(
+        f"    {'Total'.ljust(_CATEGORY_WIDTH)}  {score_bar(score, width=_SCORE_BAR_WIDTH_FULL)}  {score}/100"
+    )
     print()
 
 
