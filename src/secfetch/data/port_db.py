@@ -15,21 +15,40 @@ IANA_URL = (
 )
 
 # Minimal fallback DB if no cache and no network
-FALLBACK_PORTS = {
-    20: ("FTP Data", "unnecessary"),
-    21: ("FTP", "unnecessary"),
-    22: ("SSH", "expected"),
-    23: ("Telnet", "suspicious"),
-    25: ("SMTP", "expected"),
-    53: ("DNS", "expected"),
-    67: ("DHCP Server", "expected"),
-    68: ("DHCP Client", "expected"),
-    80: ("HTTP", "expected"),
-    110: ("POP3", "unnecessary"),
-    143: ("IMAP", "unnecessary"),
-    443: ("HTTPS", "expected"),
-    445: ("SMB", "suspicious"),
-    3389: ("RDP", "suspicious"),
+# Format matches _port_db: {port: (service_name, protocol)}
+FALLBACK_PORTS: dict[int, tuple[str, str]] = {
+    20: ("FTP Data", "TCP"),
+    21: ("FTP", "TCP"),
+    22: ("SSH", "TCP"),
+    23: ("Telnet", "TCP"),
+    25: ("SMTP", "TCP"),
+    53: ("DNS", "TCP/UDP"),
+    67: ("DHCP Server", "UDP"),
+    68: ("DHCP Client", "UDP"),
+    80: ("HTTP", "TCP"),
+    110: ("POP3", "TCP"),
+    143: ("IMAP", "TCP"),
+    443: ("HTTPS", "TCP"),
+    445: ("SMB", "TCP"),
+    3389: ("RDP", "TCP"),
+}
+
+# Risk classification for fallback ports
+FALLBACK_RISKS: dict[int, str] = {
+    20: "unnecessary",
+    21: "unnecessary",
+    22: "expected",
+    23: "suspicious",
+    25: "expected",
+    53: "expected",
+    67: "expected",
+    68: "expected",
+    80: "expected",
+    110: "unnecessary",
+    143: "unnecessary",
+    443: "expected",
+    445: "suspicious",
+    3389: "suspicious",
 }
 
 # In-memory port DB: {port: (service_name, protocol)}
@@ -116,8 +135,8 @@ def initialize() -> None:
         with _lock:
             if not _port_db:
                 # Download failed (no network): use fallback
-                for port, (name, _risk) in FALLBACK_PORTS.items():
-                    _port_db[port] = (name, "TCP")
+                _port_db.clear()
+                _port_db.update(FALLBACK_PORTS)
     else:
         # Cache exists: check for updates silently in background
         threading.Thread(target=_check_and_update, daemon=True).start()
@@ -131,12 +150,15 @@ def get_port_info(port: int) -> tuple[str, str]:
     if port in db:
         name, _ = db[port]
         # Check fallback for known risk levels
-        if port in FALLBACK_PORTS:
-            return (name, FALLBACK_PORTS[port][1])
+        if port in FALLBACK_RISKS:
+            return (name, FALLBACK_RISKS[port])
         return (name, _classify(port))
     # Check fallback for ports not in the downloaded DB
     if port in FALLBACK_PORTS:
-        return FALLBACK_PORTS[port]
+        name, _ = FALLBACK_PORTS[port]
+        if port in FALLBACK_RISKS:
+            return (name, FALLBACK_RISKS[port])
+        return (name, _classify(port))
     # Unknown port logic
     if port < 1024:
         return ("Unknown", "suspicious")

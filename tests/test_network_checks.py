@@ -44,8 +44,8 @@ class TestOpenPorts:
             result = check()
         assert result["status"] == "warn"
 
-    def test_expected_ports_give_info(self):
-        """Only expected ports (SSH/22, HTTP/80) should not trigger bad/warn."""
+    def test_expected_ports_give_ok(self):
+        """Only expected ports (SSH/22, HTTP/80) should return ok."""
         from secfetch.checks.network.ports import check
 
         ss_out = (
@@ -57,7 +57,7 @@ class TestOpenPorts:
             "secfetch.checks.network.ports.safe_subprocess_run", return_value=_ss_result(ss_out)
         ), patch("secfetch.data.port_db.get_port_info", return_value=("HTTP", "expected")):
             result = check()
-        assert result["status"] == "info"
+        assert result["status"] == "ok"
 
     def test_ss_failure_returns_unavailable(self):
         """ss command failure should return info with 'scan unavailable'."""
@@ -108,7 +108,7 @@ class TestOpenPorts:
             "secfetch.checks.network.ports.safe_subprocess_run", return_value=_ss_result(ss_out)
         ), patch("secfetch.data.port_db.get_port_info", return_value=("HTTPS", "expected")):
             result = check()
-        assert result["status"] == "info"
+        assert result["status"] == "ok"
         assert "443" in result["value"]
 
     def test_unknown_port_gives_warn(self):

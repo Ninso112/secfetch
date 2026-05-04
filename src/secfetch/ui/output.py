@@ -77,10 +77,6 @@ def _strip_ansi(text: str) -> str:
     return _ANSI_RE.sub("", text)
 
 
-def _strip_ansi(text: str) -> str:
-    return _ANSI_RE.sub("", text)
-
-
 def _format_check_result(results: list[CheckResult], name: str) -> str:
     """Format a single named check result for short output modes."""
     result = next((x for x in results if x["name"] == name), None)

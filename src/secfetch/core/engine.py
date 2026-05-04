@@ -77,9 +77,10 @@ def run_checks(fast: bool = False) -> list[CheckResult]:
     config = load_config()
     _discover_checks()
 
+    checks = get_checks()
     active = [
         c
-        for c in _checks
+        for c in checks
         if not (fast and not is_enabled(config, c["name"].lower().replace(" ", "_")))
     ]
 

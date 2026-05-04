@@ -97,11 +97,11 @@ class TestIPv6:
         assert result["value"] == "Disabled"
 
     def test_ipv6_enabled(self):
-        """IPv6 enabled should return info (informational only)."""
+        """IPv6 enabled should return warn."""
         from secfetch.checks.network.ipv6 import check
         with patch("builtins.open", mock_open(read_data="0\n")):
             result = check()
-        assert result["status"] == "info"
+        assert result["status"] == "warn"
         assert result["value"] == "Enabled"
 
 

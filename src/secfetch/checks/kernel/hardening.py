@@ -10,7 +10,6 @@ _KPTR = {
     "0": ("bad", "Unrestricted"),
 }
 _BOOL = {"1": ("ok", "Enabled"), "0": ("bad", "Disabled")}
-_BOOL_WARN = {"1": ("ok", "Enabled"), "0": ("warn", "Disabled")}
 _PTRACE = {
     "3": ("ok", "Fully Restricted"),
     "2": ("ok", "Admin Only"),

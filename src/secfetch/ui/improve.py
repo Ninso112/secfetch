@@ -252,7 +252,7 @@ def apply_fixes(results: list[CheckResult]) -> None:
                 print(f"  → {' '.join(cmd)}")
                 _run_command(cmd)
 
-            if fix_item["key"] in SYSCTL_PERSISTENT and fix_item["selected"]:
+            if fix_item["key"] in SYSCTL_PERSISTENT:
                 param, val = SYSCTL_PERSISTENT[fix_item["key"]]
                 if _write_sysctl_config(param, val):
                     sysctl_applied = True
