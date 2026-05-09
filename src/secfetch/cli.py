@@ -102,8 +102,6 @@ def main():
             print_improve(results)
         return
 
-    os.environ["SECFETCH_SHORT"] = "1" if args.short else "0"
-
     if args.command == "fastscan":
         results = run_checks(fast=True)
     else:
