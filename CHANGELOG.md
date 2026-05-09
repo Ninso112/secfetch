@@ -73,8 +73,7 @@
 ### Bugfix
 
 - `Ports`: fixed broken indentation throughout ports.py caused by duplicate code blocks; continue statement not on its own line, if-block was outside the for-loop
-- `CLI`: moved os.environ["SECFETCH_SHORT"] = "1" to before run_checks() so ports.py can read the flag at scan time
-- `Output`: removed os import and SECFETCH_SHORT env (responsibility moved to cli.py)
+- `CLI`: `--short` flag now handled purely via argparse (no env var)
 
 ## [1.3.0] - 11.03.2026
 
