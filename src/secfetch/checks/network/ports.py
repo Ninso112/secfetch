@@ -65,7 +65,7 @@ def check() -> dict[str, str]:
 
     ports = _parse_ports(result.stdout)
     if not ports:
-        return {"status": "ok", "value": "None"}
+        return {"status": "ok", "value": "None detected"}
 
     worst = max(ports, key=lambda p: _RISK_PRIORITY.get(p["risk"], 0))
     priority = _RISK_PRIORITY.get(worst["risk"], 0)
