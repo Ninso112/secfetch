@@ -60,12 +60,15 @@ def load_config() -> configparser.ConfigParser:
     config = configparser.ConfigParser()
     if not CONFIG_PATH.exists():
         CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-        # Use O_CREAT | O_EXCL to atomically create the file and prevent symlink attacks
-        fd = os.open(str(CONFIG_PATH), os.O_CREAT | O_EXCL | os.O_WRONLY, 0o600)
         try:
-            os.write(fd, DEFAULT_CONFIG.strip().encode())
-        finally:
-            os.close(fd)
+            fd = os.open(str(CONFIG_PATH), os.O_CREAT | O_EXCL | os.O_WRONLY, 0o600)
+        except FileExistsError:
+            pass
+        else:
+            try:
+                os.write(fd, DEFAULT_CONFIG.strip().encode())
+            finally:
+                os.close(fd)
     config.read(CONFIG_PATH)
     _config_cache = config
     _config_cache_key = current_key
