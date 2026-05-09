@@ -25,5 +25,4 @@ def check() -> dict[str, str]:
         if secureboot_value == 0:
             return {"status": "bad", "value": "Disabled"}
         return {"status": "warn", "value": f"Unexpected value: {secureboot_value}"}
-        return {"status": "warn", "value": f"Unexpected value: {secureboot_value}"}
     return {"status": "info", "value": "EFI var unreadable or malformed"}
