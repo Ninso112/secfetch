@@ -106,9 +106,3 @@ def sysctl_check(path: str, mapping: dict[str, tuple[str, str]]) -> dict[str, st
     if val is not None:
         return {"status": "info", "value": f"unknown: {val}"}
     return {"status": "info", "value": "not available"}
-    if val in mapping:
-        return {"status": mapping[val][0], "value": mapping[val][1]}
-    return {"status": "warn", "value": val}
-    if val in mapping:
-        return {"status": mapping[val][0], "value": mapping[val][1]}
-    return {"status": "warn", "value": f"unexpected value: {val}"}
