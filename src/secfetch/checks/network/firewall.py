@@ -25,6 +25,7 @@ def _ufw_rules() -> list[str] | None:
 
 def _iptables_rules() -> list[str] | None:
     """Count non-default iptables rules. Try without sudo first."""
+    permission_denied = False
     for cmd in (["iptables", "-L", "-n"], ["sudo", "iptables", "-L", "-n"]):
         if not shutil.which(cmd[0]):
             continue
@@ -35,13 +36,18 @@ def _iptables_rules() -> list[str] | None:
                 for line in result.stdout.splitlines()
                 if line.strip() and not line.startswith("Chain") and not line.startswith("target")
             ]
-        # Tool exists but failed (permission denied, etc.) — cannot determine
+        if "timeout" in result.stderr:
+            return None
+        if "Permission denied" in result.stderr or "permission denied" in result.stderr:
+            permission_denied = True
+    if permission_denied:
         return None
     return []
 
 
 def _nft_rules() -> list[str] | None:
     """Count nftables rules. Try without sudo first."""
+    permission_denied = False
     for cmd in (["nft", "list", "ruleset"], ["sudo", "nft", "list", "ruleset"]):
         if not shutil.which(cmd[0]):
             continue
@@ -52,7 +58,11 @@ def _nft_rules() -> list[str] | None:
                 for line in result.stdout.splitlines()
                 if line.strip() and not line.strip().startswith("#")
             ]
-        # Tool exists but failed (permission denied, etc.) — cannot determine
+        if "timeout" in result.stderr:
+            return None
+        if "Permission denied" in result.stderr or "permission denied" in result.stderr:
+            permission_denied = True
+    if permission_denied:
         return None
     return []
 
