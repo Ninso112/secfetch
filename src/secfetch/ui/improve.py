@@ -289,6 +289,10 @@ def _write_sysctl_config(param: str, value: str) -> bool:
         sysctl_path = Path(SYSCTL_FILE)
         sysctl_path.parent.mkdir(parents=True, exist_ok=True)
 
+        # Reject symlinks to prevent writing to arbitrary files
+        if sysctl_path.is_symlink():
+            return False
+
         # Read existing content to avoid duplicates
         existing = sysctl_path.read_text() if sysctl_path.exists() else ""
         lines = existing.splitlines()
