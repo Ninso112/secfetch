@@ -1,5 +1,6 @@
 import configparser
 import os
+import threading
 from pathlib import Path
 
 CONFIG_PATH = Path.home() / ".config" / "secfetch" / "checks.conf"
@@ -35,6 +36,7 @@ services = false
 
 _config_cache: configparser.ConfigParser | None = None
 _config_cache_key: str | None = None
+_config_lock = threading.Lock()
 
 
 def _cache_key() -> str:
@@ -54,25 +56,26 @@ def invalidate_cache() -> None:
 
 def load_config() -> configparser.ConfigParser:
     global _config_cache, _config_cache_key
-    current_key = _cache_key()
-    if _config_cache is not None and _config_cache_key == current_key:
-        return _config_cache
-    config = configparser.ConfigParser()
-    if not CONFIG_PATH.exists():
-        CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-        try:
-            fd = os.open(str(CONFIG_PATH), os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-        except FileExistsError:
-            pass
-        else:
+    with _config_lock:
+        current_key = _cache_key()
+        if _config_cache is not None and _config_cache_key == current_key:
+            return _config_cache
+        config = configparser.ConfigParser()
+        if not CONFIG_PATH.exists():
+            CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
             try:
-                os.write(fd, DEFAULT_CONFIG.strip().encode())
-            finally:
-                os.close(fd)
-    config.read(CONFIG_PATH)
-    _config_cache = config
-    _config_cache_key = current_key
-    return config
+                fd = os.open(str(CONFIG_PATH), os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+            except FileExistsError:
+                pass
+            else:
+                try:
+                    os.write(fd, DEFAULT_CONFIG.strip().encode())
+                finally:
+                    os.close(fd)
+        config.read(CONFIG_PATH)
+        _config_cache = config
+        _config_cache_key = current_key
+        return config
 
 
 def is_enabled(config: configparser.ConfigParser, check_name: str) -> bool:
