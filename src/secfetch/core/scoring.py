@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from secfetch.core.logger import log_warning
 from secfetch.core.types import CategoryAccumulator, CheckResult
 
 WEIGHTS: dict[str, int] = {"high": 30, "medium": 20, "low": 10, "info": 0}
@@ -15,7 +16,11 @@ def calculate_score(results: list[CheckResult]) -> tuple[int, dict[str, int]]:
     categories: dict[str, CategoryAccumulator] = {}
 
     for result in results:
-        weight = WEIGHTS.get(result["risk"], 0)
+        risk = result["risk"]
+        weight = WEIGHTS.get(risk)
+        if weight is None:
+            log_warning(f"Unknown risk level '{risk}' in check '{result['name']}', treating as info")
+            weight = 0
         total += weight
         if result["status"] == "ok":
             points = weight

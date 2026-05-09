@@ -233,9 +233,9 @@ class TestFirewallRules:
         from secfetch.checks.network.firewall import check
 
         def mock_run(cmd, **kwargs):
-            if cmd == ["sudo", "ufw", "status"]:
+            if cmd == ["ufw", "status"]:
                 return self._make_result("Status: active\n", 0, cmd)
-            if cmd == ["sudo", "ufw", "status", "numbered"]:
+            if cmd == ["ufw", "status", "numbered"]:
                 return self._make_result("[1] 22/tcp ALLOW IN  Anywhere\n", 0, cmd)
             return self._make_result("", -1, cmd)
 
@@ -249,7 +249,7 @@ class TestFirewallRules:
         from secfetch.checks.network.firewall import check
 
         def mock_run(cmd, **kwargs):
-            if cmd == ["sudo", "ufw", "status"]:
+            if cmd == ["ufw", "status"]:
                 return self._make_result("Status: inactive\n", 0, cmd)
             return self._make_result("", -1, cmd)
 
@@ -262,9 +262,9 @@ class TestFirewallRules:
         from secfetch.checks.network.firewall import check
 
         def mock_run(cmd, **kwargs):
-            if cmd == ["sudo", "ufw", "status"]:
+            if cmd == ["ufw", "status"]:
                 return self._make_result("Status: inactive\n", 0, cmd)
-            if cmd == ["sudo", "nft", "list", "ruleset"]:
+            if cmd == ["nft", "list", "ruleset"]:
                 return self._make_result("table inet filter { chain input { } }\n", 0, cmd)
             return self._make_result("", -1, cmd)
 
