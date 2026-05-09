@@ -45,12 +45,20 @@ def setup_logger(name: str = "secfetch", level: str = "INFO") -> logging.Logger:
         log_dir.mkdir(parents=True, exist_ok=True)
         log_file = log_dir / "secfetch.log"
 
+        # Pre-create log file with restrictive permissions to avoid TOCTOU
+        if not log_file.exists():
+            try:
+                fd = os.open(str(log_file), os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+                os.close(fd)
+            except (FileExistsError, OSError):
+                pass
+        else:
+            try:
+                os.chmod(str(log_file), 0o600)
+            except OSError:
+                pass
+
         file_handler = logging.FileHandler(log_file)
-        # Ensure log file has restrictive permissions (owner read/write only)
-        try:
-            os.chmod(str(log_file), 0o600)
-        except OSError:
-            pass
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
