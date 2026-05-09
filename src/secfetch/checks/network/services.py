@@ -44,7 +44,7 @@ def check() -> dict[str, str]:
         ],
         timeout=5,
     )
-    if result.returncode != 0:
+    if result.returncode != 0 and not result.stdout.strip():
         return {"status": "info", "value": "check unavailable"}
 
     services = []
