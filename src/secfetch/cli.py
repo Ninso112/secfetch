@@ -45,7 +45,10 @@ def _wait_for_quit(stop_event: threading.Event) -> None:
     except (EOFError, OSError):
         pass
     finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        try:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        except (termios.error, OSError):
+            pass
 
 
 def main():
