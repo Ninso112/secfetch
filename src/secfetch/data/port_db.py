@@ -130,13 +130,11 @@ def initialize() -> None:
     loaded = _load_cache()
 
     if not loaded:
-        # No cache: try to download immediately (first run)
-        _download_csv()
+        # No cache: use fallback immediately, download in background
         with _lock:
-            if not _port_db:
-                # Download failed (no network): use fallback
-                _port_db.clear()
-                _port_db.update(FALLBACK_PORTS)
+            _port_db.clear()
+            _port_db.update(FALLBACK_PORTS)
+        threading.Thread(target=_download_csv, daemon=True).start()
     else:
         # Cache exists: check for updates silently in background
         threading.Thread(target=_check_and_update, daemon=True).start()

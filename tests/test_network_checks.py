@@ -239,7 +239,8 @@ class TestFirewallRules:
                 return self._make_result("[1] 22/tcp ALLOW IN  Anywhere\n", 0, cmd)
             return self._make_result("", -1, cmd)
 
-        with patch("secfetch.checks.network.firewall.safe_subprocess_run", side_effect=mock_run):
+        with patch("secfetch.checks.network.firewall.safe_subprocess_run", side_effect=mock_run), \
+             patch("shutil.which", return_value=True):
             result = check()
         assert result["status"] == "ok"
         assert "ufw active" in result["value"]
@@ -328,7 +329,8 @@ class TestFirewallRules:
                 )
             return self._make_result("", -1, cmd)
 
-        with patch("secfetch.checks.network.firewall.safe_subprocess_run", side_effect=mock_run):
+        with patch("secfetch.checks.network.firewall.safe_subprocess_run", side_effect=mock_run), \
+             patch("shutil.which", return_value=True):
             result = check()
         assert "3" in result["value"]
 
