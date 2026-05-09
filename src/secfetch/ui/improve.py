@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -289,15 +290,12 @@ def _write_sysctl_config(param: str, value: str) -> bool:
         sysctl_path = Path(SYSCTL_FILE)
         sysctl_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Reject symlinks to prevent writing to arbitrary files
         if sysctl_path.is_symlink():
             return False
 
-        # Read existing content to avoid duplicates
         existing = sysctl_path.read_text() if sysctl_path.exists() else ""
         lines = existing.splitlines()
 
-        # Update existing param or append new one
         updated = False
         for i, line in enumerate(lines):
             stripped = line.strip()
@@ -312,9 +310,17 @@ def _write_sysctl_config(param: str, value: str) -> bool:
         while lines and not lines[-1].strip():
             lines.pop()
 
-        sysctl_path.write_text("\n".join(lines) + "\n")
+        content = "\n".join(lines) + "\n"
+
+        tmp_path = sysctl_path.with_suffix(".tmp")
+        fd = os.open(str(tmp_path), os.O_CREAT | O_EXCL | os.O_WRONLY, 0o644)
+        try:
+            os.write(fd, content.encode())
+        finally:
+            os.close(fd)
+        tmp_path.rename(sysctl_path)
         return True
-    except PermissionError:
+    except (PermissionError, OSError):
         return False
 
 

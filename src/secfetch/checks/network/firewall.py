@@ -16,11 +16,11 @@ def _ufw_status() -> bool:
 
 
 def _ufw_rules() -> list[str] | None:
-    """Parse ufw numbered rules. Returns None on timeout/error."""
-    result = safe_subprocess_run(["ufw", "status", "numbered"], timeout=3)
+    # Parse ufw numbered rules. Returns None on timeout/error to distinguish from "no rules".
+    result = safe_subprocess_run(["ufw", "status", "numbered"], timeout=5)
     if result.returncode != 0:
         if "timeout" in result.stderr:
-            return None
+            return None  # Signal timeout separately from "no rules"
         return []
     return [line.strip() for line in result.stdout.splitlines() if line.strip().startswith("[")]
 
