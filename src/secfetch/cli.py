@@ -1,5 +1,4 @@
 import argparse
-import os
 import select
 import sys
 import termios
