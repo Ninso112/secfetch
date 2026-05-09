@@ -19,9 +19,7 @@ def _ufw_rules() -> list[str] | None:
     """Parse ufw numbered rules. Returns None on timeout/error."""
     result = safe_subprocess_run(["ufw", "status", "numbered"], timeout=3)
     if result.returncode != 0:
-        if "timeout" in result.stderr:
-            return None
-        return []
+        return None
     return [line.strip() for line in result.stdout.splitlines() if line.strip().startswith("[")]
 
 
@@ -37,8 +35,8 @@ def _iptables_rules() -> list[str] | None:
                 for line in result.stdout.splitlines()
                 if line.strip() and not line.startswith("Chain") and not line.startswith("target")
             ]
-        if "timeout" in result.stderr:
-            return None
+        # Tool exists but failed (permission denied, etc.) — cannot determine
+        return None
     return []
 
 
@@ -54,8 +52,8 @@ def _nft_rules() -> list[str] | None:
                 for line in result.stdout.splitlines()
                 if line.strip() and not line.strip().startswith("#")
             ]
-        if "timeout" in result.stderr:
-            return None
+        # Tool exists but failed (permission denied, etc.) — cannot determine
+        return None
     return []
 
 
@@ -70,19 +68,19 @@ def check() -> dict[str, str]:
             return {"status": "info", "value": "ufw active: scan timeout"}
         return {"status": "ok", "value": f"ufw active: {len(rules)} rules"}
 
-    timed_out = False
+    unable_to_check = False
     for name, fn in [
         ("nftables", _nft_rules),
         ("iptables", _iptables_rules),
     ]:
         rules = fn()
         if rules is None:
-            timed_out = True
+            unable_to_check = True
             continue
         if rules:
             return {"status": "ok", "value": f"{name}: {len(rules)} rules"}
 
-    if timed_out:
-        return {"status": "info", "value": "firewall scan timeout"}
+    if unable_to_check:
+        return {"status": "info", "value": "firewall status unreadable"}
 
     return {"status": "bad", "value": "No active firewall found"}
