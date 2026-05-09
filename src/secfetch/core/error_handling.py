@@ -97,11 +97,15 @@ def sysctl_check(path: str, mapping: dict[str, tuple[str, str]]) -> dict[str, st
     """Read a sysctl value from *path* and translate via *mapping* to a status/value dict.
 
     Returns {"status": "info", "value": "not available"} if the path is unreadable.
-    Returns {"status": "warn", "value": "<actual>"} if the value is not in the mapping.
+    Returns {"status": "info", "value": "unknown: <val>"} if the value is readable
+    but not present in the mapping.
     """
     val = safe_read_file(path, default=None)
-    if val is None:
-        return {"status": "info", "value": "not available"}
+    if val is not None and val in mapping:
+        return {"status": mapping[val][0], "value": mapping[val][1]}
+    if val is not None:
+        return {"status": "info", "value": f"unknown: {val}"}
+    return {"status": "info", "value": "not available"}
     if val in mapping:
         return {"status": mapping[val][0], "value": mapping[val][1]}
     return {"status": "warn", "value": val}
