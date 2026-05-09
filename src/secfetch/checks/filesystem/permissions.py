@@ -1,7 +1,4 @@
 """Filesystem permission security checks."""
-# Note: This module uses subprocess.run directly (not safe_subprocess_run) because
-# the find commands require stderr=DEVNULL to suppress "Permission denied" noise
-# from /proc, /sys, and other restricted paths during recursive filesystem scans.
 import os
 import stat
 import subprocess
@@ -22,24 +19,29 @@ _SAFE_SUID_PATHS: frozenset[str] = frozenset({
 })
 _SAFE_SUID_NAMES: frozenset[str] = frozenset(os.path.basename(p) for p in _SAFE_SUID_PATHS)
 
+_SKIPPED_DIRS = (
+    "/proc", "/sys", "/dev", "/tmp", "/var/tmp", "/run", "/var/run",
+    "/snap", "/var/lib/docker", "/var/lib/lxc", "/var/lib/containerd",
+    "/var/cache", "/var/lib/apt", "/var/lib/dpkg",
+)
+
+
+def _find_cmd(extra_predicates: list[str]) -> list[str]:
+    """Build a find command that prunes known-safe dirs and applies extra predicates."""
+    prune_expr = ["("]
+    for i, d in enumerate(_SKIPPED_DIRS):
+        if i:
+            prune_expr.append("-o")
+        prune_expr.extend(["-path", f"{d}", "-o", "-path", f"{d}/*"])
+    prune_expr.append(")")
+    return ["find", "/", "-xdev", *prune_expr, "-prune", "-o", "-type", "f", *extra_predicates]
+
 
 @security_check(name="World Writable", category="filesystem", risk="high")
 @handle_check_errors
 def world_writable() -> dict[str, str]:
     """Find world-writable files outside of expected locations."""
-    cmd = [
-        "find", "/",
-        "-xdev",
-        "-type", "f",
-        "-perm", "-002",
-        "-not", "-path", "/proc/*",
-        "-not", "-path", "/sys/*",
-        "-not", "-path", "/dev/*",
-        "-not", "-path", "/tmp/*",
-        "-not", "-path", "/var/tmp/*",
-        "-not", "-path", "/run/*",
-        "-not", "-path", "/var/run/*",
-    ]
+    cmd = _find_cmd(["-perm", "-002", "-print"])
 
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, stderr=subprocess.DEVNULL)
     files = [line.strip() for line in result.stdout.splitlines() if line.strip()]
@@ -56,14 +58,7 @@ def world_writable() -> dict[str, str]:
 @handle_check_errors
 def suid_binaries() -> dict[str, str]:
     """Find SUID binaries that could be privilege escalation vectors."""
-    cmd = [
-        "find", "/",
-        "-xdev",
-        "-type", "f",
-        "-perm", "-4000",
-        "-not", "-path", "/proc/*",
-        "-not", "-path", "/sys/*",
-    ]
+    cmd = _find_cmd(["-perm", "-4000", "-print"])
 
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, stderr=subprocess.DEVNULL)
 
