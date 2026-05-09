@@ -314,6 +314,10 @@ def _write_sysctl_config(param: str, value: str) -> bool:
         content = "\n".join(lines) + "\n"
 
         tmp_path = sysctl_path.with_suffix(".tmp")
+        try:
+            tmp_path.unlink(missing_ok=True)
+        except OSError:
+            pass
         fd = os.open(str(tmp_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
         try:
             os.write(fd, content.encode())
