@@ -18,6 +18,10 @@ def check() -> dict[str, str]:
     with open(matches[0], "rb") as f:
         data = f.read()
     # UEFI variable format: 4-byte EFI attributes header + 1-byte value
-    if len(data) >= 5 and data[4] == 1:
-        return {"status": "ok", "value": "Enabled"}
-    return {"status": "bad", "value": "Disabled"}
+    if len(data) >= 5:
+        secureboot_value = data[4]
+        if secureboot_value == 1:
+            return {"status": "ok", "value": "Enabled"}
+        if secureboot_value == 0:
+            return {"status": "bad", "value": "Disabled"}
+    return {"status": "info", "value": "EFI var unreadable or malformed"}
