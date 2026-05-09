@@ -166,7 +166,7 @@ def get_port_info(port: int) -> tuple[str, str]:
 
 
 def _classify(port: int) -> str:
-    # Default classification for ports in the IANA DB but not in FALLBACK_PORTS.
-    if port < 1024:
-        return "suspicious"
+    # Called only for ports present in the IANA DB (i.e. officially registered).
+    # Return "unknown" rather than "suspicious" — these are IANA-assigned, just
+    # not in our curated risk list.
     return "unknown"
